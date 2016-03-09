@@ -2,6 +2,17 @@
 
 A simple redis java mock for unit testing.
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.zxl0714/redis-mock/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.zxl0714/redis-mock)
+
+
+```xml
+<dependency>
+  <groupId>com.github.zxl0714</groupId>
+  <artifactId>redis-mock</artifactId>
+  <version>0.1</version>
+</dependency>
+```
+
 ## How to use it
 
 The very simple way.
