@@ -31,9 +31,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <guava.version>18.0</guava.version>
+        <guava.version>19.0</guava.version>
         <junit.version>4.12</junit.version>
-        <redis.version>2.6.3</redis.version>
+        <redis.version>2.9.0</redis.version>
+        <redis-embedded.version>0.6</redis-embedded.version>
     </properties>
 
     <dependencies>
@@ -53,6 +54,12 @@
             <artifactId>jedis</artifactId>
             <version>${redis.version}</version>
             <scope>test</scope>
+        </dependency>
+        <!-- Used for creating an embedded Redis for testing and comparing behaviour-->
+        <dependency>
+            <groupId>com.github.kstyrc</groupId>
+            <artifactId>embedded-redis</artifactId>
+            <version>${redis-embedded.version}</version>
         </dependency>
     </dependencies>
 
