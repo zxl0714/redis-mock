@@ -36,6 +36,7 @@
         <redis.version>2.9.0</redis.version>
         <redis-embedded.version>0.6</redis-embedded.version>
         <findbugs.version>3.0.1</findbugs.version>
+        <slf4j.version>1.7.20</slf4j.version>
     </properties>
 
     <dependencies>
@@ -50,6 +51,7 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Used for creatiung Jedis Client Connections -->
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
@@ -68,6 +70,12 @@
             <artifactId>annotations</artifactId>
             <version>${findbugs.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <!-- SLF4J is the logging API all modules should use -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
     </dependencies>
 

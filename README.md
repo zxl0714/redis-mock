@@ -34,6 +34,7 @@ private static RedisServer server = null;
 @Before
 public void before() throws IOException {
   server = RedisServer.newRedisServer();  // bind to a random port
+  server.start();
 }
 
 @Test
