@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import static ai.grakn.redismock.Utils.checkArgumentsNumberEquals;
 import static ai.grakn.redismock.Utils.checkArgumentsNumberFactor;
@@ -503,6 +504,14 @@ public class CommandExecutor {
     }
 
     public Slice lpush(List<Slice> params) throws WrongNumberOfArgumentsException, WrongValueTypeException, InternalException {
+        return pushLR(params, (list, slice) -> list.addFirst(slice));
+    }
+
+    public Slice rpush(List<Slice> params) throws WrongNumberOfArgumentsException, WrongValueTypeException, InternalException {
+        return pushLR(params, (list, slice) -> list.addLast(slice));
+    }
+
+    private Slice pushLR(List<Slice> params, BiConsumer<LinkedList, Slice> pusher) throws WrongNumberOfArgumentsException, WrongValueTypeException, InternalException {
         checkArgumentsNumberGreater(params, 1);
 
         Slice key = params.get(0);
@@ -518,7 +527,7 @@ public class CommandExecutor {
             throw new WrongValueTypeException("WRONGTYPE Operation against a key holding the wrong kind of value");
         }
         for (int i = 1; i < params.size(); i++) {
-            list.addFirst(params.get(i));
+            pusher.accept(list, params.get(i));
         }
         try {
             base.rawPut(key, serializeObject(list), -1L);
@@ -672,32 +681,6 @@ public class CommandExecutor {
             return Response.NULL;
         }
         return Response.bulkString(list.get(index));
-    }
-
-    public Slice rpush(List<Slice> params) throws WrongNumberOfArgumentsException, WrongValueTypeException, InternalException {
-        checkArgumentsNumberGreater(params, 1);
-
-        Slice key = params.get(0);
-        Slice data = base.rawGet(key);
-        LinkedList<Slice> list;
-        try {
-            if (data != null) {
-                list = deserializeObject(data);
-            } else {
-                list = Lists.newLinkedList();
-            }
-        } catch (Exception e) {
-            throw new WrongValueTypeException("WRONGTYPE Operation against a key holding the wrong kind of value");
-        }
-        for (int i = 1; i < params.size(); i++) {
-            list.addLast(params.get(i));
-        }
-        try {
-            base.rawPut(key, serializeObject(list), -1L);
-        } catch (Exception e) {
-            throw new InternalException(e.getMessage());
-        }
-        return Response.integer(list.size());
     }
 
     public synchronized Slice execCommand(RedisCommand command) {
