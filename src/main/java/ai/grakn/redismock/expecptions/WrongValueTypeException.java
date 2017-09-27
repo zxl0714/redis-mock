@@ -1,4 +1,4 @@
-package com.github.zxl0714.redismock.expecptions;
+package ai.grakn.redismock.expecptions;
 
 /**
  * Created by Xiaolu on 2015/4/22.

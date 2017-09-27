@@ -1,4 +1,4 @@
-package com.github.zxl0714.redismock;
+package ai.grakn.redismock;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;

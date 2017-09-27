@@ -1,18 +1,18 @@
-package com.github.zxl0714.redismock;
+package ai.grakn.redismock;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.github.zxl0714.redismock.expecptions.WrongNumberOfArgumentsException;
-import com.github.zxl0714.redismock.expecptions.WrongValueTypeException;
-import com.github.zxl0714.redismock.expecptions.InternalException;
+import ai.grakn.redismock.expecptions.WrongNumberOfArgumentsException;
+import ai.grakn.redismock.expecptions.WrongValueTypeException;
+import ai.grakn.redismock.expecptions.InternalException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import static com.github.zxl0714.redismock.Utils.*;
+import static ai.grakn.redismock.Utils.*;
 
 /**
  * Created by Xiaolu on 2015/4/20.

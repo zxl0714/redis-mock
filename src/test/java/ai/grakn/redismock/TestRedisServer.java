@@ -1,4 +1,4 @@
-package com.github.zxl0714.redismock;
+package ai.grakn.redismock;
 
 import org.junit.Test;
 import redis.clients.jedis.Jedis;

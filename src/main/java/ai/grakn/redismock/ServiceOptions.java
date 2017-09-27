@@ -1,4 +1,4 @@
-package com.github.zxl0714.redismock;
+package ai.grakn.redismock;
 
 /**
  * Created by Xiaolu on 2015/4/22.

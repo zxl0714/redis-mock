@@ -1,7 +1,7 @@
-package com.github.zxl0714.redismock;
+package ai.grakn.redismock;
 
-import com.github.zxl0714.redismock.expecptions.EOFException;
-import com.github.zxl0714.redismock.expecptions.ParseErrorException;
+import ai.grakn.redismock.expecptions.EOFException;
+import ai.grakn.redismock.expecptions.ParseErrorException;
 import org.junit.Test;
 
 import java.io.IOException;

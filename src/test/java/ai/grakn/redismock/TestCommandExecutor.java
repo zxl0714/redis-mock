@@ -1,11 +1,11 @@
-package com.github.zxl0714.redismock;
+package ai.grakn.redismock;
 
-import com.github.zxl0714.redismock.expecptions.EOFException;
-import com.github.zxl0714.redismock.expecptions.ParseErrorException;
+import ai.grakn.redismock.expecptions.EOFException;
+import ai.grakn.redismock.expecptions.ParseErrorException;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.github.zxl0714.redismock.RedisCommandParser.parse;
+import static ai.grakn.redismock.RedisCommandParser.parse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -35,23 +35,23 @@ public class TestCommandExecutor {
     }
 
     private void assertCommandEquals(String expect, String command) throws ParseErrorException, EOFException {
-        assertEquals(bulkString(expect), executor.execCommand(parse(command)).toString());
+        assertEquals(bulkString(expect), executor.execCommand(RedisCommandParser.parse(command)).toString());
     }
 
     private void assertCommandEquals(long expect, String command) throws ParseErrorException, EOFException {
-        assertEquals(Response.integer(expect), executor.execCommand(parse(command)));
+        assertEquals(Response.integer(expect), executor.execCommand(RedisCommandParser.parse(command)));
     }
 
     private void assertCommandNull(String command) throws ParseErrorException, EOFException {
-        assertEquals(Response.NULL, executor.execCommand(parse(command)));
+        assertEquals(Response.NULL, executor.execCommand(RedisCommandParser.parse(command)));
     }
 
     private void assertCommandOK(String command) throws ParseErrorException, EOFException {
-        assertEquals(Response.OK, executor.execCommand(parse(command)));
+        assertEquals(Response.OK, executor.execCommand(RedisCommandParser.parse(command)));
     }
 
     private void assertCommandError(String command) throws ParseErrorException, EOFException {
-        assertEquals('-', executor.execCommand(parse(command)).data()[0]);
+        assertEquals('-', executor.execCommand(RedisCommandParser.parse(command)).data()[0]);
     }
 
     @Before
@@ -110,9 +110,9 @@ public class TestCommandExecutor {
         assertCommandOK(array("SET", "ab", "abd"));
         assertCommandEquals(-1, array("pttl", "ab"));
         assertCommandEquals(1, array("expire", "ab", "2"));
-        assertTrue(executor.execCommand(parse(array("pttl", "ab"))).compareTo(Response.integer(1900L)) > 0);
+        assertTrue(executor.execCommand(RedisCommandParser.parse(array("pttl", "ab"))).compareTo(Response.integer(1900L)) > 0);
         Thread.sleep(1100);
-        assertTrue(executor.execCommand(parse(array("pttl", "ab"))).compareTo(Response.integer(999L)) < 0);
+        assertTrue(executor.execCommand(RedisCommandParser.parse(array("pttl", "ab"))).compareTo(Response.integer(999L)) < 0);
         Thread.sleep(1000);
         assertCommandEquals(-2, array("pttl", "ab"));
     }
@@ -183,10 +183,10 @@ public class TestCommandExecutor {
         assertCommandEquals(0, array("getbit", "mykey", "6"));
         assertCommandEquals(1, array("setbit", "mykey", "7", "0"));
         assertEquals(Response.bulkString(new Slice(new byte[]{0})),
-                executor.execCommand(parse(array("get", "mykey"))));
+                executor.execCommand(RedisCommandParser.parse(array("get", "mykey"))));
         assertCommandEquals(0, array("setbit", "mykey", "33", "1"));
         assertEquals(Response.bulkString(new Slice(new byte[]{0, 0, 0, 0, 2})),
-                executor.execCommand(parse(array("get", "mykey"))));
+                executor.execCommand(RedisCommandParser.parse(array("get", "mykey"))));
         assertCommandEquals(0, array("setbit", "mykey", "22", "1"));
         assertCommandEquals(0, array("getbit", "mykey", "117"));
         assertCommandError(array("getbit", "mykey", "a"));
@@ -207,8 +207,8 @@ public class TestCommandExecutor {
     @Test
     public void testPsetex() throws ParseErrorException, EOFException {
         assertCommandOK(array("pSETex", "ab", "99", "k"));
-        assertTrue(executor.execCommand(parse(array("pttl", "ab"))).compareTo(Response.integer(90)) > 0);
-        assertTrue(executor.execCommand(parse(array("pttl", "ab"))).compareTo(Response.integer(99)) <= 0);
+        assertTrue(executor.execCommand(RedisCommandParser.parse(array("pttl", "ab"))).compareTo(Response.integer(90)) > 0);
+        assertTrue(executor.execCommand(RedisCommandParser.parse(array("pttl", "ab"))).compareTo(Response.integer(99)) <= 0);
         assertCommandError(array("pSETex", "ab", "10a", "k"));
     }
 
@@ -234,7 +234,7 @@ public class TestCommandExecutor {
         assertCommandOK(array("SET", "b", "abd"));
 
         assertEquals(array("abc", "abd", null),
-                executor.execCommand(parse(array("mget", "a", "b", "c"))).toString());
+                executor.execCommand(RedisCommandParser.parse(array("mget", "a", "b", "c"))).toString());
     }
 
     @Test
