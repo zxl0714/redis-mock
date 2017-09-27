@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +22,6 @@ public class RedisBase {
         syncBases.add(base);
     }
 
-    @Nullable
     public synchronized Slice rawGet(Slice key) {
         Preconditions.checkNotNull(key);
 
@@ -36,7 +34,6 @@ public class RedisBase {
         return base.get(key);
     }
 
-    @Nullable
     public synchronized Long getTTL(Slice key) {
         Preconditions.checkNotNull(key);
 
@@ -82,7 +79,7 @@ public class RedisBase {
         return 0L;
     }
 
-    public synchronized void rawPut(Slice key, Slice value, @Nullable Long ttl) {
+    public synchronized void rawPut(Slice key, Slice value, Long ttl) {
         Preconditions.checkNotNull(key);
         Preconditions.checkNotNull(value);
 
