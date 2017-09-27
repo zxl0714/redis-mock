@@ -38,7 +38,7 @@ public class RedisServer {
         this.options = options;
     }
 
-    public synchronized void start() throws IOException {
+    public void start() throws IOException {
         Preconditions.checkState(server == null);
         Preconditions.checkState(service == null);
 

@@ -14,7 +14,7 @@ public class Utils {
         try {
             closeable.close();
         } catch (Exception e) {
-            // ignore
+            e.printStackTrace();
         }
     }
 

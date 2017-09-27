@@ -1,18 +1,28 @@
 package ai.grakn.redismock;
 
+import ai.grakn.redismock.expecptions.InternalException;
+import ai.grakn.redismock.expecptions.WrongNumberOfArgumentsException;
+import ai.grakn.redismock.expecptions.WrongValueTypeException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import ai.grakn.redismock.expecptions.WrongNumberOfArgumentsException;
-import ai.grakn.redismock.expecptions.WrongValueTypeException;
-import ai.grakn.redismock.expecptions.InternalException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
-import static ai.grakn.redismock.Utils.*;
+import static ai.grakn.redismock.Utils.checkArgumentsNumberEquals;
+import static ai.grakn.redismock.Utils.checkArgumentsNumberFactor;
+import static ai.grakn.redismock.Utils.checkArgumentsNumberGreater;
+import static ai.grakn.redismock.Utils.deserializeObject;
+import static ai.grakn.redismock.Utils.serializeObject;
 
 /**
  * Created by Xiaolu on 2015/4/20.
@@ -49,7 +59,7 @@ public class CommandExecutor {
         checkArgumentsNumberEquals(params, 3);
 
         try {
-            long ttl = Long.parseLong(new String(params.get(1).data())) * 1000;
+            long ttl = Long.parseLong(new String(params.get(1).data(), StandardCharsets.UTF_8)) * 1000;
             base.rawPut(params.get(0), params.get(2), ttl);
         } catch (NumberFormatException e) {
             throw new WrongValueTypeException("ERR value is not an integer or out of range");
@@ -61,7 +71,7 @@ public class CommandExecutor {
         checkArgumentsNumberEquals(params, 3);
 
         try {
-            long ttl = Long.parseLong(new String(params.get(1).data()));
+            long ttl = Long.parseLong(new String(params.get(1).data(), StandardCharsets.UTF_8));
             base.rawPut(params.get(0), params.get(2), ttl);
         } catch (NumberFormatException e) {
             throw new WrongValueTypeException("ERR value is not an integer or out of range");
@@ -215,7 +225,7 @@ public class CommandExecutor {
         checkArgumentsNumberEquals(params, 2);
 
         try {
-            long pttl = Long.parseLong(new String(params.get(1).data())) * 1000;
+            long pttl = Long.parseLong(new String(params.get(1).data(), StandardCharsets.UTF_8)) * 1000;
             return Response.integer(base.setTTL(params.get(0), pttl));
         } catch (NumberFormatException e) {
             throw new WrongValueTypeException("ERR value is not an integer or out of range");
@@ -226,7 +236,7 @@ public class CommandExecutor {
         checkArgumentsNumberEquals(params, 2);
 
         try {
-            long pttl = Long.parseLong(new String(params.get(1).data()));
+            long pttl = Long.parseLong(new String(params.get(1).data(), StandardCharsets.UTF_8));
             return Response.integer(base.setTTL(params.get(0), pttl));
         } catch (NumberFormatException e) {
             throw new WrongValueTypeException("ERR value is not an integer or out of range");
@@ -243,7 +253,7 @@ public class CommandExecutor {
             return Response.integer(1L);
         }
         try {
-            long r = Long.parseLong(new String(v.data())) + 1;
+            long r = Long.parseLong(new String(v.data(), StandardCharsets.UTF_8)) + 1;
             base.rawPut(key, new Slice(String.valueOf(r)), -1L);
             return Response.integer(r);
         } catch (NumberFormatException e) {
@@ -262,7 +272,7 @@ public class CommandExecutor {
                 base.rawPut(key, new Slice(String.valueOf(d)), -1L);
                 return Response.integer(d);
             }
-            long r = Long.parseLong(new String(v.data())) + d;
+            long r = Long.parseLong(new String(v.data(), StandardCharsets.UTF_8)) + d;
             base.rawPut(key, new Slice(String.valueOf(r)), -1L);
             return Response.integer(r);
         } catch (NumberFormatException e) {
@@ -280,7 +290,7 @@ public class CommandExecutor {
             return Response.integer(-1L);
         }
         try {
-            long r = Long.parseLong(new String(v.data())) - 1;
+            long r = Long.parseLong(new String(v.data(), StandardCharsets.UTF_8)) - 1;
             base.rawPut(key, new Slice(String.valueOf(r)), -1L);
             return Response.integer(r);
         } catch (NumberFormatException e) {
@@ -299,7 +309,7 @@ public class CommandExecutor {
                 base.rawPut(key, new Slice(String.valueOf(-d)), -1L);
                 return Response.integer(-d);
             }
-            long r = Long.parseLong(new String(v.data())) - d;
+            long r = Long.parseLong(new String(v.data(), StandardCharsets.UTF_8)) - d;
             base.rawPut(key, new Slice(String.valueOf(r)), -1L);
             return Response.integer(r);
         } catch (NumberFormatException e) {
@@ -474,7 +484,7 @@ public class CommandExecutor {
         checkArgumentsNumberEquals(params, 2);
 
         try {
-            long deadline = Long.parseLong(new String(params.get(1).data())) * 1000;
+            long deadline = Long.parseLong(new String(params.get(1).data(), StandardCharsets.UTF_8)) * 1000;
             return Response.integer(base.setDeadline(params.get(0), deadline));
         } catch (NumberFormatException e) {
             throw new WrongValueTypeException("ERR value is not an integer or out of range");
@@ -485,7 +495,7 @@ public class CommandExecutor {
         checkArgumentsNumberEquals(params, 2);
 
         try {
-            long deadline = Long.parseLong(new String(params.get(1).data()));
+            long deadline = Long.parseLong(new String(params.get(1).data(), StandardCharsets.UTF_8));
             return Response.integer(base.setDeadline(params.get(0), deadline));
         } catch (NumberFormatException e) {
             throw new WrongValueTypeException("ERR value is not an integer or out of range");
@@ -694,7 +704,7 @@ public class CommandExecutor {
         Preconditions.checkArgument(command.getParameters().size() > 0);
 
         List<Slice> params = command.getParameters();
-        String name = new String(params.get(0).data()).toLowerCase();
+        String name = new String(params.get(0).data(), StandardCharsets.UTF_8).toLowerCase(Locale.ROOT);
         try {
             Method method = this.getClass().getMethod(name, List.class);
             return (Slice) method.invoke(this, params.subList(1, params.size()));

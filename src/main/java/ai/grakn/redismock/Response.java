@@ -3,6 +3,7 @@ package ai.grakn.redismock;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -20,23 +21,23 @@ public class Response {
             return NULL;
         }
         ByteArrayDataOutput bo = ByteStreams.newDataOutput();
-        bo.write(String.format("$%d\r\n", s.length()).getBytes());
+        bo.write(String.format("$%d\r%n", s.length()).getBytes(StandardCharsets.UTF_8));
         bo.write(s.data());
-        bo.write("\r\n".getBytes());
+        bo.write("\r\n".getBytes(StandardCharsets.UTF_8));
         return new Slice(bo.toByteArray());
     }
 
     public static Slice error(String s) {
-        return new Slice(String.format("-%s\r\n", s));
+        return new Slice(String.format("-%s\r%n", s));
     }
 
     public static Slice integer(long v) {
-        return new Slice(String.format(":%d\r\n", v));
+        return new Slice(String.format(":%d\r%n", v));
     }
 
     public static Slice array(List<Slice> values) {
         ByteArrayDataOutput bo = ByteStreams.newDataOutput();
-        bo.write(String.format("*%d\r\n", values.size()).getBytes());
+        bo.write(String.format("*%d\r%n", values.size()).getBytes(StandardCharsets.UTF_8));
         for (Slice value : values) {
             bo.write(value.data());
         }

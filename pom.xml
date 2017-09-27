@@ -35,6 +35,7 @@
         <junit.version>4.12</junit.version>
         <redis.version>2.9.0</redis.version>
         <redis-embedded.version>0.6</redis-embedded.version>
+        <findbugs.version>3.0.1</findbugs.version>
     </properties>
 
     <dependencies>
@@ -60,6 +61,13 @@
             <groupId>com.github.kstyrc</groupId>
             <artifactId>embedded-redis</artifactId>
             <version>${redis-embedded.version}</version>
+        </dependency>
+        <!-- Used for finding common bugs in java projects -->
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+            <version>${findbugs.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -117,6 +125,23 @@
                         <id>attach-javadocs</id>
                         <goals>
                             <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>3.0.4</version>
+                <configuration>
+                    <excludeFilterFile>findbugs-exclude.xml</excludeFilterFile>
+                    <effort>Max</effort>
+                    <threshold>Low</threshold>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
                         </goals>
                     </execution>
                 </executions>

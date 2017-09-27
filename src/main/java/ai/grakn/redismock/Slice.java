@@ -1,12 +1,14 @@
 package ai.grakn.redismock;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
  * Created by Xiaolu on 2015/4/23.
  */
 public class Slice implements Comparable<Slice>, Serializable {
+    private static final long serialVersionUID = 247772234876073528L;
 
     private final byte[] data;
 
@@ -15,7 +17,7 @@ public class Slice implements Comparable<Slice>, Serializable {
     }
 
     public Slice(String data) {
-        this.data = data.getBytes().clone();
+        this.data = data.getBytes(StandardCharsets.UTF_8).clone();
     }
 
     public byte[] data() {
@@ -28,7 +30,7 @@ public class Slice implements Comparable<Slice>, Serializable {
 
     @Override
     public String toString() {
-        return new String(data);
+        return new String(data, StandardCharsets.UTF_8);
     }
 
     @Override

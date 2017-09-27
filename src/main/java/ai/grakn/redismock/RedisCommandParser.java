@@ -10,6 +10,7 @@ import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Created by Xiaolu on 2015/4/20.
@@ -20,7 +21,7 @@ public class RedisCommandParser {
 
     @VisibleForTesting
     RedisCommandParser(String stringInput) {
-        this(new ByteArrayInputStream(stringInput.getBytes()));
+        this(new ByteArrayInputStream(stringInput.getBytes(StandardCharsets.UTF_8)));
     }
 
     @VisibleForTesting
@@ -125,7 +126,7 @@ public class RedisCommandParser {
     static RedisCommand parse(String stringInput) throws ParseErrorException, EOFException {
         Preconditions.checkNotNull(stringInput);
 
-        return parse(new ByteArrayInputStream(stringInput.getBytes()));
+        return parse(new ByteArrayInputStream(stringInput.getBytes(StandardCharsets.UTF_8)));
     }
 
     public static RedisCommand parse(InputStream messageInput) throws ParseErrorException, EOFException {
