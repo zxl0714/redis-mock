@@ -2,7 +2,11 @@ package ai.grakn.redismock;
 
 import ai.grakn.redismock.expecptions.WrongNumberOfArgumentsException;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.List;
 
 /**
