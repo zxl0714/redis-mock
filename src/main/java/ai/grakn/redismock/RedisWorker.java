@@ -1,26 +1,29 @@
 package ai.grakn.redismock;
 
+import ai.grakn.redismock.commands.RedisOperationExecutor;
 import ai.grakn.redismock.expecptions.EOFException;
 import ai.grakn.redismock.expecptions.ParseErrorException;
 import com.google.common.base.Preconditions;
-;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+
+;
 
 /**
  * Created by Xiaolu on 2015/4/18.
  */
 public class RedisWorker implements Runnable {
 
-    private final CommandExecutor executor;
+    private final RedisOperationExecutor executor;
     private final Socket socket;
     private final ServiceOptions options;
     private final InputStream in;
     private final OutputStream out;
 
-    public RedisWorker(CommandExecutor executor, Socket socket,  ServiceOptions options) throws IOException {
+    public RedisWorker(RedisOperationExecutor executor, Socket socket, ServiceOptions options) throws IOException {
         Preconditions.checkNotNull(executor);
         Preconditions.checkNotNull(socket);
         Preconditions.checkNotNull(options);

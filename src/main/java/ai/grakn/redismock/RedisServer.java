@@ -1,5 +1,6 @@
 package ai.grakn.redismock;
 
+import ai.grakn.redismock.commands.RedisOperationExecutor;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
@@ -43,7 +44,7 @@ public class RedisServer {
         Preconditions.checkState(service == null);
 
         server = new ServerSocket(bindPort);
-        service = new Thread(new RedisService(server, new CommandExecutor(base), options));
+        service = new Thread(new RedisService(server, new RedisOperationExecutor(base), options));
         service.start();
     }
 

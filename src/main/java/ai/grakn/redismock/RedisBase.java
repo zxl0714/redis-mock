@@ -11,7 +11,6 @@ import java.util.Map;
  * Created by Xiaolu on 2015/4/20.
  */
 public class RedisBase {
-
     private final Map<Slice, Slice> base = Maps.newHashMap();
     private final Map<Slice, Long> deadlines = Maps.newHashMap();
     private List<RedisBase> syncBases = Lists.newArrayList();

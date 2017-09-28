@@ -1,21 +1,21 @@
 package ai.grakn.redismock;
 
+import ai.grakn.redismock.commands.RedisOperationExecutor;
 import ai.grakn.redismock.expecptions.EOFException;
 import ai.grakn.redismock.expecptions.ParseErrorException;
 import org.junit.Before;
 import org.junit.Test;
 
-import static ai.grakn.redismock.RedisCommandParser.parse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
  * Created by Xiaolu on 2015/4/20.
  */
-public class TestCommandExecutor {
+public class TestRedisOperationExecutor {
 
     private static final String CRLF = "\r\n";
-    private static CommandExecutor executor;
+    private static RedisOperationExecutor executor;
 
     private static String bulkString(CharSequence param) {
         return "$" + param.length() + CRLF + param.toString() + CRLF;
@@ -56,7 +56,7 @@ public class TestCommandExecutor {
 
     @Before
     public void initCommandExecutor() {
-        executor = new CommandExecutor(new RedisBase());
+        executor = new RedisOperationExecutor(new RedisBase());
     }
 
     @Test

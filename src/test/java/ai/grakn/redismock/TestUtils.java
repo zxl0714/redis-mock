@@ -17,11 +17,6 @@ import static org.junit.Assert.assertTrue;
 public class TestUtils {
 
     @Test
-    public void testAvailableCommands() {
-        System.out.println(CommandExecutor.getSupportedCommands());
-    }
-
-    @Test
     public void testCloseQuietly() throws IOException {
         Utils.closeQuietly(null);
         Utils.closeQuietly(new InputStream() {

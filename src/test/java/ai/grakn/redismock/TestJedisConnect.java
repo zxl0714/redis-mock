@@ -1,7 +1,8 @@
 package ai.grakn.redismock;
 
 import org.junit.Test;
-import redis.clients.jedis.*;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
 
 import java.io.IOException;
 import java.util.List;

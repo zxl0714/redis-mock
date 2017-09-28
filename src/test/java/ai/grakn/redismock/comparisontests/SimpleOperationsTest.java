@@ -1,18 +1,10 @@
 package ai.grakn.redismock.comparisontests;
 
 
-import ai.grakn.redismock.RedisServer;
-import ai.grakn.redismock.util.EmbeddedRedis;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.experimental.theories.DataPoints;
-import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 import redis.clients.jedis.Jedis;
-
-import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
