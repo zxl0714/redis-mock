@@ -40,13 +40,12 @@ public class ComparisonBase {
     public static Jedis[] jedis(){
         Jedis[] jedis = new Jedis[2];
 
-        //Create mocked jedis connection
-        jedis[0] = new Jedis(fakeServer.getHost(), fakeServer.getBindPort());
-
         //Create real jedis connection
-        jedis[1] = new Jedis("localhost", EmbeddedRedis.PORT);
+        jedis[0] = new Jedis("localhost", EmbeddedRedis.PORT);
+
+        //Create mocked jedis connection
+        jedis[1] = new Jedis(fakeServer.getHost(), fakeServer.getBindPort());
 
         return jedis;
     }
-
 }

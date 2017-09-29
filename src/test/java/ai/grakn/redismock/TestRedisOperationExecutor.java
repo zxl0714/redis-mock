@@ -56,7 +56,8 @@ public class TestRedisOperationExecutor {
 
     @Before
     public void initCommandExecutor() {
-        executor = new RedisOperationExecutor(new RedisBase());
+        //TODO: Mock out the client here
+        executor = new RedisOperationExecutor(new RedisBase(), null);
     }
 
     @Test

@@ -1,6 +1,5 @@
 package ai.grakn.redismock;
 
-import ai.grakn.redismock.commands.RedisOperationExecutor;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
@@ -13,16 +12,16 @@ import java.net.Socket;
 public class RedisService implements Runnable {
 
     private final ServerSocket server;
-    private final RedisOperationExecutor executor;
+    private final RedisBase base;
     private final ServiceOptions options;
 
-    public RedisService(ServerSocket server, RedisOperationExecutor executor, ServiceOptions options) {
+    public RedisService(ServerSocket server, RedisBase base, ServiceOptions options) {
         Preconditions.checkNotNull(server);
-        Preconditions.checkNotNull(executor);
+        Preconditions.checkNotNull(base);
         Preconditions.checkNotNull(options);
 
         this.server = server;
-        this.executor = executor;
+        this.base = base;
         this.options = options;
     }
 
@@ -30,7 +29,7 @@ public class RedisService implements Runnable {
         while (!server.isClosed()) {
             try {
                 Socket socket = server.accept();
-                Thread t = new Thread(new RedisWorker(executor, socket, options));
+                Thread t = new Thread(new RedisClient(base, socket, options));
                 t.start();
             } catch (IOException e) {
                 // Do noting

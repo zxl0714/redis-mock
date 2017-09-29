@@ -15,7 +15,7 @@ import java.net.Socket;
 /**
  * Created by Xiaolu on 2015/4/18.
  */
-public class RedisWorker implements Runnable {
+public class RedisClient implements Runnable {
 
     private final RedisOperationExecutor executor;
     private final Socket socket;
@@ -23,12 +23,12 @@ public class RedisWorker implements Runnable {
     private final InputStream in;
     private final OutputStream out;
 
-    public RedisWorker(RedisOperationExecutor executor, Socket socket, ServiceOptions options) throws IOException {
-        Preconditions.checkNotNull(executor);
+    public RedisClient(RedisBase base, Socket socket, ServiceOptions options) throws IOException {
+        Preconditions.checkNotNull(base);
         Preconditions.checkNotNull(socket);
         Preconditions.checkNotNull(options);
 
-        this.executor = executor;
+        this.executor = new RedisOperationExecutor(base, this);
         this.socket = socket;
         this.options = options;
         this.in = socket.getInputStream();
@@ -40,9 +40,9 @@ public class RedisWorker implements Runnable {
         while (true) {
             try {
                 RedisCommand command = RedisCommandParser.parse(in);
-                Slice resp = executor.execCommand(command);
-                out.write(resp.data());
-                out.flush();
+                Slice response = executor.execCommand(command);
+                sendResponse(response);
+
                 count++;
                 if (options.getCloseSocketAfterSeveralCommands() != 0
                         && options.getCloseSocketAfterSeveralCommands() == count) {
@@ -60,5 +60,10 @@ public class RedisWorker implements Runnable {
         Utils.closeQuietly(socket);
         Utils.closeQuietly(in);
         Utils.closeQuietly(out);
+    }
+
+    public void sendResponse(Slice response) throws IOException {
+        out.write(response.data());
+        out.flush();
     }
 }

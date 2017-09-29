@@ -4,13 +4,16 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Xiaolu on 2015/4/20.
  */
 public class RedisBase {
+    private final Map<Slice, Set<RedisClient>> subscribers = Maps.newHashMap();
     private final Map<Slice, Slice> base = Maps.newHashMap();
     private final Map<Slice, Long> deadlines = Maps.newHashMap();
     private List<RedisBase> syncBases = Lists.newArrayList();
@@ -104,5 +107,34 @@ public class RedisBase {
         for (RedisBase base : syncBases) {
             base.del(key);
         }
+    }
+
+    public synchronized void addSubscriber(Slice channel, RedisClient client){
+        subscribers.merge(channel, Collections.singleton(client), (currentSubscribers, newSubscribers) -> {
+            currentSubscribers.addAll(newSubscribers);
+            return currentSubscribers;
+        });
+    }
+
+    public synchronized void removeSubscriber(Slice channel, RedisClient client){
+        if(subscribers.containsKey(channel)){
+            subscribers.get(channel).remove(client);
+        }
+    }
+
+    public Set<RedisClient> getSubscribers(Slice channel){
+        if (subscribers.containsKey(channel)) {
+            return subscribers.get(channel);
+        }
+        return Collections.emptySet();
+    }
+
+    //TODO: Make this less ugly and not scale like rubbish
+    public int getNumSubscriptions(RedisClient client){
+        int count = 0;
+        for (Set<RedisClient> redisClients : subscribers.values()) {
+            if(redisClients.contains(client)) count++;
+        }
+        return count;
     }
 }
