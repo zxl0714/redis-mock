@@ -1,5 +1,5 @@
 [![GitHub release](https://img.shields.io/github/release/graknlabs/redis-mock.svg)](https://github.com/graknlabs/redis-mock/releases/latest)
-[![Build Status](https://travis-ci.org/graknlabs/redis-mock.svg?branch=internal)](https://travis-ci.org/graknlabs/redis-mock)
+[![Build Status](https://travis-ci.org/graknlabs/redis-mock.svg?branch=master)](https://travis-ci.org/graknlabs/redis-mock)
 [![Slack Status](http://grakn-slackin.herokuapp.com/badge.svg)](https://grakn.ai/slack)
 
 # Redis-Mock
