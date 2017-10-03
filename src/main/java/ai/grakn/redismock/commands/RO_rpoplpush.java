@@ -10,21 +10,24 @@ import java.util.List;
 
 class RO_rpoplpush extends AbstractRedisOperation {
     RO_rpoplpush(RedisBase base, List<Slice> params) {
-        //NOTE: The minimum number of arguments is 1 because this mock is used for brpoplpush as well which takes in 3 arguments
-        super(base, params, null, 1, null);
+        super(base, params, 2, null, null);
+    }
+
+    RO_rpoplpush(RedisBase base, List<Slice> params, Integer numExpected) {
+        super(base, params, numExpected, null, null);
     }
 
     @Override
     public Slice execute() {
-        Slice list1Key = params().get(0);
-        Slice list2Key = params().get(1);
+        Slice source = params().get(0);
+        Slice target = params().get(1);
 
         //Pop last one
-        Slice result = new RO_rpop(base(), Collections.singletonList(list1Key)).execute();
+        Slice result = new RO_rpop(base(), Collections.singletonList(source)).execute();
         Slice valueToPush = SliceParser.consumeParameter(result.data());
 
         //Push it into the other list
-        new RO_lpush(base(), Arrays.asList(list2Key, valueToPush)).execute();
+        new RO_lpush(base(), Arrays.asList(target, valueToPush)).execute();
 
         return result;
     }

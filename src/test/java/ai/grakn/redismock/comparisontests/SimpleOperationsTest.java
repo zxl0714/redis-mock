@@ -27,14 +27,14 @@ public class SimpleOperationsTest extends ComparisonBase {
     }
 
     @Theory
-    public void whenUsingRPOP_EnsureTheLastElementPushedIsReturned(Jedis jedis){
+    public void whenUsingRpop_EnsureTheLastElementPushedIsReturned(Jedis jedis){
         String key = "Another key";
         jedis.rpush(key, "1", "2", "3");
         assertEquals(jedis.rpop(key), "3");
     }
 
     @Theory
-    public void whenUsingRPOPLPUSH_CorrectResultsAreReturned(Jedis jedis){
+    public void whenUsingRpoplpush_CorrectResultsAreReturned(Jedis jedis){
         String list1key = "list 1";
         String list2key = "list 2";
 
@@ -54,7 +54,7 @@ public class SimpleOperationsTest extends ComparisonBase {
         assertTrue(results2.contains("c"));
 
         //Check that the one list has been pushed into the other
-        String result = jedis.brpoplpush(list1key, list2key, 30);
+        String result = jedis.rpoplpush(list1key, list2key);
         assertEquals("3", result);
 
         results1 = jedis.lrange(list1key, 0, -1);
@@ -69,4 +69,5 @@ public class SimpleOperationsTest extends ComparisonBase {
         assertTrue(results2.contains("b"));
         assertTrue(results2.contains("c"));
     }
+
 }

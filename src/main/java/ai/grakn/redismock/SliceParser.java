@@ -73,15 +73,20 @@ public class SliceParser {
     }
 
     @VisibleForTesting
-    public static long consumeCount(InputStream messageInput) throws ParseErrorException, EOFException {
-        expectByte(messageInput, (byte) '*');
+    public static long consumeCount(InputStream messageInput) throws ParseErrorException {
         try {
+            expectByte(messageInput, (byte) '*');
             long count = consumeLong(messageInput);
             expectByte(messageInput, (byte) '\n');
             return count;
         } catch (EOFException e) {
             throw new ParseErrorException();
         }
+    }
+
+    public static long consumeCount(byte [] message) throws ParseErrorException{
+        InputStream stream = new ByteArrayInputStream(message);
+        return consumeCount(stream);
     }
 
     private static boolean isNumber(byte c) {

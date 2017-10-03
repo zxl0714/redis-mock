@@ -8,6 +8,7 @@ import ai.grakn.redismock.Slice;
 import ai.grakn.redismock.expecptions.WrongNumberOfArgumentsException;
 import ai.grakn.redismock.expecptions.WrongValueTypeException;
 import com.google.common.base.Preconditions;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
  * Created by Xiaolu on 2015/4/20.
  */
 public class RedisOperationExecutor {
-
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(RedisOperationExecutor.class);
     private final RedisClient owner;
     private final RedisBase base;
     private List<RedisOperation> transaction;
@@ -102,8 +103,9 @@ public class RedisOperationExecutor {
             case "lindex":
                 return new RO_lindex(base, params);
             case "rpoplpush":
-            case "brpoplpush":
                 return new RO_rpoplpush(base, params);
+            case "brpoplpush":
+                return new RO_brpoplpush(base, params);
             case "subscribe":
                 return new RO_subscribe(base, owner, params);
             case "unsubscribe":
@@ -126,8 +128,9 @@ public class RedisOperationExecutor {
             //Transaction handling
             if(name.equals("multi")){
                 newTransaction();
+                return Response.clientResponse(name, Response.OK);
             } else if(name.equals("exec")){
-                return commitTransaction();
+                return Response.clientResponse(name, commitTransaction());
             }
 
 
@@ -136,30 +139,40 @@ public class RedisOperationExecutor {
             if(transaction != null){
                 transaction.add(redisOperation);
             } else {
-                return redisOperation.execute();
+                return Response.clientResponse(name, redisOperation.execute());
             }
 
-            return Response.OK;
+            return Response.clientResponse(name, Response.OK);
         } catch(UnsupportedOperationException | WrongValueTypeException e){
+            LOG.error("Malformed request", e);
             return Response.error(e.getMessage());
         } catch (WrongNumberOfArgumentsException e){
+            LOG.error("Malformed request", e);
             return Response.error(String.format("ERR wrong number of arguments for '%s' command", name));
         }
     }
 
-    private synchronized void newTransaction(){
+    private void newTransaction(){
         if(transaction != null) throw new RuntimeException("Redis mock does not support more than one transaction");
         transaction = new ArrayList<>();
     }
 
-    private synchronized Slice commitTransaction(){
-        if(transaction == null) throw new RuntimeException("No transaction started");
-        List<Slice> results = transaction.stream().map(RedisOperation::execute).collect(Collectors.toList());
-        closeTransaction();
-        return Response.array(results);
+    private Slice commitTransaction(){
+        synchronized (base) {
+            if (transaction == null) throw new RuntimeException("No transaction started");
+            List<Slice> results;
+            try {
+                results = transaction.stream().map(RedisOperation::execute).collect(Collectors.toList());
+            } catch (Throwable t){
+                LOG.error("ERROR during committing transaction", t);
+                return Response.NULL;
+            }
+            closeTransaction();
+            return Response.array(results);
+        }
     }
 
-    private synchronized void closeTransaction(){
+    private void closeTransaction(){
         if (transaction != null){
             transaction.clear();
             transaction = null;

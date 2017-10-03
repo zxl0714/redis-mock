@@ -63,7 +63,9 @@ public class RedisClient implements Runnable {
     }
 
     public void sendResponse(Slice response) throws IOException {
-        out.write(response.data());
-        out.flush();
+        if(!response.equals(Response.SKIP)) {
+            out.write(response.data());
+            out.flush();
+        }
     }
 }

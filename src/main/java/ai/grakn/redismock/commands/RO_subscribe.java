@@ -18,7 +18,8 @@ class RO_subscribe extends AbstractRedisOperation {
     @Override
     public Slice execute() {
         params().forEach(channel -> base().addSubscriber(channel, client));
-        int numSubscriptions = base().getNumSubscriptions(client);
-        return Response.subscribedToChannel(params(), numSubscriptions);
+        List<Slice> numSubscriptions = base().getSubscriptions(client);
+
+        return Response.subscribedToChannel(numSubscriptions);
     }
 }
