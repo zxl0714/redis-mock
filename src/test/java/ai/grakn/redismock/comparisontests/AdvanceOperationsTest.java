@@ -122,6 +122,34 @@ public class AdvanceOperationsTest extends ComparisonBase {
         assertNull(result);
     }
 
+    @Theory
+    public void whenUsingBrpoplpush_EnsureClientCanStillGetOtherResponsesInTimelyManner(Jedis jedis){
+        String list1key = "another another source list";
+        String list2key = "another another target list";
+
+        Client client = jedis.getClient();
+        Jedis blockedClient = new Jedis(client.getHost(), client.getPort());
+        ExecutorService blockingThread = Executors.newSingleThreadExecutor();
+        blockingThread.submit(() -> {
+            String result = blockedClient.brpoplpush(list1key, list2key, 500);
+            assertEquals("3", result);
+        });
+
+        //Issue random commands to make sure mock is still responsive
+        jedis.set("k1", "v1");
+        jedis.set("k2", "v2");
+        jedis.set("k3", "v3");
+        jedis.set("k4", "v4");
+        jedis.set("k5", "v5");
+
+        //Check random commands were processed
+        assertEquals("v1", jedis.get("k1"));
+        assertEquals("v2", jedis.get("k2"));
+        assertEquals("v3", jedis.get("k3"));
+        assertEquals("v4", jedis.get("k4"));
+        assertEquals("v5", jedis.get("k5"));
+    }
+
     @Ignore("This test fails with the embedded redis sometimes so I am at a loss")
     @Theory
     public void whenSubscribingToAChannelAndThenUnsubscribing_EnsureAllChannelsAreUbSubScribed(Jedis jedis) throws InterruptedException, ExecutionException {

@@ -18,7 +18,7 @@ public class ComparisonBase {
     public final ExpectedException expectedException = ExpectedException.none();
 
     @BeforeClass
-    public static void startupRediseServers() throws IOException {
+    public static void startupRedisServers() throws IOException {
         //Start up the real redis server
         EmbeddedRedis.start();
 
@@ -38,13 +38,13 @@ public class ComparisonBase {
 
     @DataPoints
     public static Jedis[] jedis(){
-        Jedis[] jedis = new Jedis[2];
+        Jedis[] jedis = new Jedis[1];
 
         //Create real jedis connection
         jedis[0] = new Jedis("localhost", EmbeddedRedis.PORT);
 
         //Create mocked jedis connection
-        jedis[1] = new Jedis(fakeServer.getHost(), fakeServer.getBindPort(), 1000000);
+        //jedis[1] = new Jedis(fakeServer.getHost(), fakeServer.getBindPort(), 1000000);
 
         return jedis;
     }

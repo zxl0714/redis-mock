@@ -5,9 +5,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class WorkerManager {
-    private final static ExecutorService pool = Executors.newFixedThreadPool(20);
+    private final static ExecutorService pool = Executors.newCachedThreadPool();
 
     public static Future runJob(Runnable function){
-        return pool.submit(function::run);
+        return pool.submit(function);
     }
 }
