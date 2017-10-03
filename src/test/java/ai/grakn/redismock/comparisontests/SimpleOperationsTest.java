@@ -4,7 +4,9 @@ package ai.grakn.redismock.comparisontests;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
+import redis.clients.jedis.Client;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.util.List;
 
@@ -68,6 +70,58 @@ public class SimpleOperationsTest extends ComparisonBase {
         assertTrue(results2.contains("a"));
         assertTrue(results2.contains("b"));
         assertTrue(results2.contains("c"));
+    }
+
+    @Theory
+    public void whenUsingFlushall_EnsureEverythingIsDeleted(Jedis jedis){
+        String key = "my-super-special-key";
+        String value = "my-not-so-special-value";
+
+        jedis.set(key, value);
+        assertEquals(value, jedis.get(key));
+
+        jedis.flushAll();
+        assertNull(jedis.get(key));
+    }
+
+    @Theory
+    public void whenUsingLrem_EnsureDeletionsWorkAsExpected(Jedis jedis){
+        String key = "my-super-special-sexy-key";
+        String hello = "hello";
+        String foo = "foo";
+
+        jedis.rpush(key, hello);
+        jedis.rpush(key, hello);
+        jedis.rpush(key, foo);
+        jedis.rpush(key, hello);
+
+        //Everything in order
+        List<String> list = jedis.lrange(key, 0, -1);
+        assertEquals(hello, list.get(0));
+        assertEquals(hello, list.get(1));
+        assertEquals(foo, list.get(2));
+        assertEquals(hello, list.get(3));
+
+        long numRemoved = jedis.lrem(key, -2, hello);
+        assertEquals(2L, numRemoved);
+
+        //Check order again
+        list = jedis.lrange(key, 0, -1);
+        assertEquals(hello, list.get(0));
+        assertEquals(foo, list.get(1));
+    }
+
+    @Theory
+    public void whenUsingQuit_EnsureTheConnectionIsClosed(Jedis jedis){
+        //Create a new connection
+        Client client = jedis.getClient();
+        Jedis newJedis = new Jedis(client.getHost(), client.getPort());
+        newJedis.set("A happy lucky key", "A sad value");
+        assertEquals("OK", newJedis.quit());
+
+        expectedException.expect(JedisConnectionException.class);
+
+        newJedis.set("A happy lucky key", "A sad value 2");
     }
 
 }

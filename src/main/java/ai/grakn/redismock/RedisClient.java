@@ -57,9 +57,6 @@ public class RedisClient implements Runnable {
                 break;
             }
         }
-        Utils.closeQuietly(socket);
-        Utils.closeQuietly(in);
-        Utils.closeQuietly(out);
     }
 
     public void sendResponse(Slice response) throws IOException {
@@ -67,5 +64,11 @@ public class RedisClient implements Runnable {
             out.write(response.data());
             out.flush();
         }
+    }
+
+    public void close(){
+        Utils.closeQuietly(socket);
+        Utils.closeQuietly(in);
+        Utils.closeQuietly(out);
     }
 }

@@ -18,7 +18,7 @@ public class RedisBase {
     private final Map<Slice, Set<RedisClient>> subscribers = Maps.newHashMap();
     private final Map<Slice, Slice> base = Maps.newHashMap();
     private final Map<Slice, Long> deadlines = Maps.newHashMap();
-    private List<RedisBase> syncBases = Lists.newArrayList();
+    private final List<RedisBase> syncBases = Lists.newArrayList();
 
     public RedisBase() {}
 
@@ -81,6 +81,13 @@ public class RedisBase {
             return 1L;
         }
         return 0L;
+    }
+
+    public synchronized void clear(){
+        base.clear();
+        subscribers.clear();
+        deadlines.clear();
+        syncBases.clear();
     }
 
     public synchronized void rawPut(Slice key, Slice value, Long ttl) {
