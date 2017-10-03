@@ -105,7 +105,7 @@ public class RedisOperationExecutor {
             case "rpoplpush":
                 return new RO_rpoplpush(base, params);
             case "brpoplpush":
-                return new RO_brpoplpush(base, params);
+                return new RO_brpoplpush(base, owner, params);
             case "subscribe":
                 return new RO_subscribe(base, owner, params);
             case "unsubscribe":
