@@ -30,7 +30,7 @@ class RO_brpoplpush extends RO_rpoplpush {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            currentSleep = currentSleep + 100;
+            currentSleep = currentSleep + 10;
             count = getCount(source);
         }
 

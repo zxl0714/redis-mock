@@ -14,7 +14,7 @@ class RO_unsubscribe extends AbstractRedisOperation {
     private final RedisClient client;
 
     RO_unsubscribe(RedisBase base, RedisClient client, List<Slice> params) {
-        super(base, params,0, null, null);
+        super(base, params,null, null, null);
         this.client = client;
     }
 
