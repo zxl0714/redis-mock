@@ -1,8 +1,6 @@
 package ai.grakn.redismock;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,15 +8,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Xiaolu on 2015/4/20.
  */
 public class RedisBase {
-    private final Map<Slice, Set<RedisClient>> subscribers = Maps.newHashMap();
-    private final Map<Slice, Slice> base = Maps.newHashMap();
-    private final Map<Slice, Long> deadlines = Maps.newHashMap();
-    private final List<RedisBase> syncBases = Lists.newArrayList();
+    private final Map<Slice, Set<RedisClient>> subscribers = new ConcurrentHashMap<>();
+    private final Map<Slice, Slice> base = new ConcurrentHashMap<>();
+    private final Map<Slice, Long> deadlines = new ConcurrentHashMap<>();
+    private final Set<RedisBase> syncBases = ConcurrentHashMap.newKeySet();
 
     public RedisBase() {}
 
@@ -26,7 +25,7 @@ public class RedisBase {
         syncBases.add(base);
     }
 
-    public synchronized Slice rawGet(Slice key) {
+    public Slice rawGet(Slice key) {
         Preconditions.checkNotNull(key);
 
         Long deadline = deadlines.get(key);
@@ -38,7 +37,7 @@ public class RedisBase {
         return base.get(key);
     }
 
-    public synchronized Long getTTL(Slice key) {
+    public Long getTTL(Slice key) {
         Preconditions.checkNotNull(key);
 
         Long deadline = deadlines.get(key);
@@ -57,7 +56,7 @@ public class RedisBase {
         return null;
     }
 
-    public synchronized long setTTL(Slice key, long ttl) {
+    public long setTTL(Slice key, long ttl) {
         Preconditions.checkNotNull(key);
 
         if (base.containsKey(key)) {
@@ -70,7 +69,7 @@ public class RedisBase {
         return 0L;
     }
 
-    public synchronized long setDeadline(Slice key, long deadline) {
+    public long setDeadline(Slice key, long deadline) {
         Preconditions.checkNotNull(key);
 
         if (base.containsKey(key)) {
@@ -83,14 +82,14 @@ public class RedisBase {
         return 0L;
     }
 
-    public synchronized void clear(){
+    public void clear(){
         base.clear();
         subscribers.clear();
         deadlines.clear();
         syncBases.clear();
     }
 
-    public synchronized void rawPut(Slice key, Slice value, Long ttl) {
+    public void rawPut(Slice key, Slice value, Long ttl) {
         Preconditions.checkNotNull(key);
         Preconditions.checkNotNull(value);
 
@@ -107,7 +106,7 @@ public class RedisBase {
         }
     }
 
-    public synchronized void del(Slice key) {
+    public void del(Slice key) {
         Preconditions.checkNotNull(key);
 
         base.remove(key);
@@ -118,7 +117,7 @@ public class RedisBase {
         }
     }
 
-    public synchronized void addSubscriber(Slice channel, RedisClient client){
+    public void addSubscriber(Slice channel, RedisClient client){
         Set<RedisClient> newClient = new HashSet<>();
         newClient.add(client);
         subscribers.merge(channel, newClient, (currentSubscribers, newSubscribers) -> {
@@ -127,7 +126,7 @@ public class RedisBase {
         });
     }
 
-    public synchronized void removeSubscriber(Slice channel, RedisClient client){
+    public void removeSubscriber(Slice channel, RedisClient client){
         if(subscribers.containsKey(channel)){
             subscribers.get(channel).remove(client);
         }

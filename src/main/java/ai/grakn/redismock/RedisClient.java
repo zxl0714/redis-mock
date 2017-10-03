@@ -4,6 +4,7 @@ import ai.grakn.redismock.commands.RedisOperationExecutor;
 import ai.grakn.redismock.expecptions.EOFException;
 import ai.grakn.redismock.expecptions.ParseErrorException;
 import com.google.common.base.Preconditions;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +17,7 @@ import java.net.Socket;
  * Created by Xiaolu on 2015/4/18.
  */
 public class RedisClient implements Runnable {
-
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(RedisClient.class);
     private final RedisOperationExecutor executor;
     private final Socket socket;
     private final ServiceOptions options;
@@ -48,13 +49,12 @@ public class RedisClient implements Runnable {
                         && options.getCloseSocketAfterSeveralCommands() == count) {
                     break;
                 }
-            } catch (IOException e) {
+            } catch (EOFException | IOException e) {
+                LOG.error("Internal error", e);
                 // Do nothing
                 break;
             } catch (ParseErrorException e) {
                 // TODO return error
-            } catch (EOFException e) {
-                break;
             }
         }
     }

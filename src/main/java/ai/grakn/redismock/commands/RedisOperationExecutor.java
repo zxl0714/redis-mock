@@ -164,18 +164,16 @@ public class RedisOperationExecutor {
     }
 
     private Slice commitTransaction(){
-        synchronized (base) {
-            if (transaction == null) throw new RuntimeException("No transaction started");
-            List<Slice> results;
-            try {
-                results = transaction.stream().map(RedisOperation::execute).collect(Collectors.toList());
-            } catch (Throwable t){
-                LOG.error("ERROR during committing transaction", t);
-                return Response.NULL;
-            }
-            closeTransaction();
-            return Response.array(results);
+        if (transaction == null) throw new RuntimeException("No transaction started");
+        List<Slice> results;
+        try {
+            results = transaction.stream().map(RedisOperation::execute).collect(Collectors.toList());
+        } catch (Throwable t){
+            LOG.error("ERROR during committing transaction", t);
+            return Response.NULL;
         }
+        closeTransaction();
+        return Response.array(results);
     }
 
     private void closeTransaction(){
