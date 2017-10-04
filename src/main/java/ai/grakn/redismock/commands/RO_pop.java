@@ -17,8 +17,7 @@ abstract class RO_pop extends AbstractRedisOperation {
 
     abstract Slice popper(LinkedList<Slice> list);
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         Slice key = params().get(0);
         Slice data = base().rawGet(key);
         LinkedList<Slice> list;

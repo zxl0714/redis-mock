@@ -18,8 +18,7 @@ class RO_lrem extends AbstractRedisOperation {
         super(base, params,3, null, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response(){
         Slice key = params().get(0);
         int numRemove = convertToInteger(new String(params().get(1).data(), StandardCharsets.UTF_8));
         Slice target = params().get(2);

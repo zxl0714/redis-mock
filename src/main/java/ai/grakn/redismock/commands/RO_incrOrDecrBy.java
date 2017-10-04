@@ -16,8 +16,7 @@ abstract class RO_incrOrDecrBy extends AbstractRedisOperation {
 
     abstract long incrementOrDecrementValue(List<Slice> params);
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         Slice key = params().get(0);
         long d = incrementOrDecrementValue(params());
         Slice v = base().rawGet(key);

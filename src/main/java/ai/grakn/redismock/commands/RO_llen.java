@@ -15,8 +15,7 @@ class RO_llen extends AbstractRedisOperation {
         super(base, params,  1, null, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         Slice key = params().get(0);
         Slice data = base().rawGet(key);
         LinkedList<Slice> list;

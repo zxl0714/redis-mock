@@ -15,8 +15,7 @@ class RO_ttl extends AbstractRedisOperation {
         return Response.integer((pttl + 999) / 1000);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         Long pttl = base().getTTL(params().get(0));
         if (pttl == null) {
             return Response.integer(-2L);

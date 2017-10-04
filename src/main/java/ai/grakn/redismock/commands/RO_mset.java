@@ -11,8 +11,7 @@ class RO_mset extends AbstractRedisOperation {
         super(base, params, null, 0, 2);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         for (int i = 0; i < params().size(); i += 2) {
             base().rawPut(params().get(i), params().get(i + 1), -1L);
         }

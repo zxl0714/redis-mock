@@ -18,8 +18,7 @@ class RO_pexpire extends AbstractRedisOperation {
         return convertToLong(new String(params.get(1).data(), StandardCharsets.UTF_8));
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         return Response.integer(base().setTTL(params().get(0), getValue(params())));
     }
 }

@@ -17,8 +17,7 @@ class RO_exec extends AbstractRedisOperation {
         this.transaction = transaction;
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         try {
             List<Slice> results = transaction.stream().
                     map(RedisOperation::execute).

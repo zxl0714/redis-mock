@@ -11,8 +11,7 @@ class RO_setnx extends AbstractRedisOperation {
         super(base, params, 2, null, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response(){
         if (base().rawGet(params().get(0)) == null) {
             base().rawPut(params().get(0), params().get(1), -1L);
             return Response.integer(1);

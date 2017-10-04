@@ -11,8 +11,7 @@ class RO_del extends AbstractRedisOperation {
         super(base, params,null, 0, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response(){
         int count = 0;
         for (Slice key : params()) {
             Slice value = base().rawGet(key);

@@ -14,8 +14,7 @@ class RO_expireat extends AbstractRedisOperation {
         super(base, params, 2, null, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         long deadline = convertToLong(new String(params().get(1).data(), StandardCharsets.UTF_8)) * 1000;
         return Response.integer(base().setDeadline(params().get(0), deadline));
     }

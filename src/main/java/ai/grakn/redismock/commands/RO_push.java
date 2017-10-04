@@ -19,8 +19,7 @@ abstract class RO_push extends AbstractRedisOperation {
 
     abstract void pusher(LinkedList<Slice> list, Slice slice);
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         Slice key = params().get(0);
         Slice data = base().rawGet(key);
         LinkedList<Slice> list;

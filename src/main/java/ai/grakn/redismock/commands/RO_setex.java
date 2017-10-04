@@ -23,8 +23,7 @@ class RO_setex extends RO_set {
         return convertToLong(new String(params.get(1).data(), StandardCharsets.UTF_8)) * 1000;
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         base().rawPut(params().get(0), params().get(2), valueToSet(params()));
         return Response.OK;
     }

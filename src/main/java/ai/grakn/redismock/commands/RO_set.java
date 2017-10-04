@@ -19,8 +19,7 @@ class RO_set extends AbstractRedisOperation {
         return -1L;
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         base().rawPut(params().get(0), params().get(1), valueToSet(params()));
         return Response.OK;
     }
