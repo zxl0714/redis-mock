@@ -29,10 +29,11 @@ class RO_unsubscribe extends AbstractRedisOperation {
 
         for (Slice channel : channelsToUbsubscribeFrom) {
             LOG.debug("Unsubscribing from channel [" + channel + "]");
-            base().removeSubscriber(channel, client);
-            int numSubscriptions = base().getSubscriptions(client).size();
-            Slice response = Response.unsubscribe(channel, numSubscriptions);
-            client.sendResponse(Response.clientResponse("unsubscribe", response), "unsubscribe");
+            if(base().removeSubscriber(channel, client)) {
+                int numSubscriptions = base().getSubscriptions(client).size();
+                Slice response = Response.unsubscribe(channel, numSubscriptions);
+                client.sendResponse(Response.clientResponse("unsubscribe", response), "unsubscribe");
+            }
         }
 
         //Skip is sent because we have already responded
