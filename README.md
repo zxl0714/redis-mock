@@ -15,15 +15,8 @@ Add it as a dependency in Maven as:
 <dependency>
   <groupId>ai.grakn</groupId>
   <artifactId>redis-mock</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.1</version>
 </dependency>
-
-<repositories>
-    <repository>
-        <id>releases</id>
-        <url>https://maven.grakn.ai/content/repositories/releases/</url>
-    </repository>
-</repositories>
 ```
 
 Create a redis server and bind it to jedis:
@@ -73,58 +66,3 @@ server.setOptions(options);
 server.start();
 ```
 
-## Supported Commands
-
-strlen
-
-get
-
-append
-
-exists
-
-set
-
-ttl
-
-decrby
-
-pfadd
-
-pfmerge
-
-mget
-
-mset
-
-getset
-
-del
-
-expireat
-
-pexpireat
-
-setex
-
-psetex
-
-setnx
-
-setbit
-
-getbit
-
-pttl
-
-expire
-
-pexpire
-
-incr
-
-incrby
-
-decr
-
-pfcount
