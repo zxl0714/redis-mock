@@ -47,7 +47,7 @@ public class TestJedisConnect {
     public void testLpush() throws IOException {
         RedisServer server = RedisServer.newRedisServer();
         server.start();
-        Jedis jedis = new Jedis(server.getHost(), server.getBindPort());
+        Jedis jedis = new Jedis(server.getHost(), server.getBindPort(), 10000000);
         assertEquals(1, (long) jedis.lpush("list", "world"));
         assertEquals(2, (long) jedis.lpush("list", "hello"));
         assertEquals(3, (long) jedis.rpush("list", "!"));

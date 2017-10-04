@@ -4,14 +4,11 @@ import ai.grakn.redismock.RedisBase;
 import ai.grakn.redismock.RedisClient;
 import ai.grakn.redismock.Response;
 import ai.grakn.redismock.Slice;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
 class RO_publish extends AbstractRedisOperation {
-    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(RO_publish.class);
 
     RO_publish(RedisBase base, List<Slice> params) {
         super(base, params,2, null, null);
@@ -25,12 +22,8 @@ class RO_publish extends AbstractRedisOperation {
         Set<RedisClient> subscibers = base().getSubscribers(channel);
 
         subscibers.forEach(subscriber -> {
-            try {
-                Slice response = Response.publishedMessage(channel, message);
-                subscriber.sendResponse(response);
-            } catch (IOException e){
-                LOG.error("Unable to contact subscriber", e);
-            }
+            Slice response = Response.publishedMessage(channel, message);
+            subscriber.sendResponse(response, "contacting subscriber");
         });
 
         return Response.integer(subscibers.size());

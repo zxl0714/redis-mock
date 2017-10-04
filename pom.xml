@@ -2,31 +2,37 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+
     <groupId>ai.grakn</groupId>
     <artifactId>redis-mock</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-
+    <packaging>jar</packaging>
     <name>redis-mock</name>
-    <description>A simple redis java mock for unit testing.</description>
+    <description>In memory Redis mock for testing</description>
+    <url>https://github.com/graknlabs/redis-mock</url>
+    <prerequisites>
+        <maven>3.0.0</maven>
+    </prerequisites>
 
     <developers>
+        <developer>
+            <id>fppt</id>
+            <name>Filipe Peliz Pinto Teixeira</name>
+            <email>filipe@grakn.ai</email>
+        </developer>
+
+        <!-- Original developer of library no longer maintaining project -->
         <developer>
             <id>zxl0714</id>
             <name>zxl0714</name>
             <email>zxl0714@gmail.com</email>
         </developer>
-        <developer>
-            <id>fppt</id>
-            <name>Filipe Peliz Pinto Teixeira</name>
-        </developer>
     </developers>
-
-    <licenses>
-        <license>
-            <name>MIT License</name>
-            <url>http://www.opensource.org/licenses/mit-license.php</url>
-        </license>
-    </licenses>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -38,6 +44,17 @@
         <findbugs.version>3.0.1</findbugs.version>
         <slf4j.version>1.7.20</slf4j.version>
     </properties>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <dependencies>
         <dependency>
@@ -51,7 +68,7 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- Used for creatiung Jedis Client Connections -->
+        <!-- Used for creating Jedis Client Connections -->
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>

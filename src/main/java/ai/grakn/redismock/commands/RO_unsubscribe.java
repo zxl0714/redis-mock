@@ -6,7 +6,6 @@ import ai.grakn.redismock.Response;
 import ai.grakn.redismock.Slice;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.List;
 
 class RO_unsubscribe extends AbstractRedisOperation {
@@ -33,11 +32,7 @@ class RO_unsubscribe extends AbstractRedisOperation {
             base().removeSubscriber(channel, client);
             int numSubscriptions = base().getSubscriptions(client).size();
             Slice response = Response.unsubscribe(channel, numSubscriptions);
-            try {
-                client.sendResponse(Response.clientResponse("unsubscribe", response));
-            } catch (IOException e) {
-                LOG.error("Unable to unsubscribe from channel [" + channel + "]", e);
-            }
+            client.sendResponse(Response.clientResponse("unsubscribe", response), "unsubscribe");
         }
 
         //Skip is sent because we have already responded

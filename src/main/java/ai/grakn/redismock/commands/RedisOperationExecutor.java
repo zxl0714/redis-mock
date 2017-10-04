@@ -30,7 +30,7 @@ public class RedisOperationExecutor {
         this.owner = owner;
     }
 
-    public RedisOperation buildSimpleOperation(String name, List<Slice> params){
+    private RedisOperation buildSimpleOperation(String name, List<Slice> params){
         switch(name){
             case "set":
                 return new RO_set(base, params);
