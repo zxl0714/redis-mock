@@ -158,4 +158,9 @@ public class SimpleOperationsTest extends ComparisonBase {
         assertEquals(25, Integer.parseInt(jedis.get(key)));
     }
 
+    @Theory
+    public void whenPinging_Pong(Jedis jedis){
+        assertEquals("PONG", jedis.ping());
+    }
+
 }
