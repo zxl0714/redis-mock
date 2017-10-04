@@ -25,6 +25,9 @@ abstract class RO_incrOrDecrBy extends AbstractRedisOperation {
             base().rawPut(key, new Slice(String.valueOf(d)), -1L);
             return Response.integer(d);
         }
+
+        System.out.println("Initial value [" + v + "] being modified by [" + d + "]");
+
         long r = convertToLong(new String(v.data(), StandardCharsets.UTF_8)) + d;
         base().rawPut(key, new Slice(String.valueOf(r)), -1L);
         return Response.integer(r);

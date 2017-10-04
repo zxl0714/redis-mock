@@ -8,7 +8,13 @@ import redis.clients.jedis.Client;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -122,6 +128,34 @@ public class SimpleOperationsTest extends ComparisonBase {
         expectedException.expect(JedisConnectionException.class);
 
         newJedis.set("A happy lucky key", "A sad value 2");
+    }
+
+    @Theory
+    public void whenConcurrentlyIncrementingAndDecrementingCount_EnsureFinalCountIsCorrect(Jedis jedis) throws ExecutionException, InterruptedException {
+        String key = "my-count-tracker";
+        int [] count = new int[]{1, 5, 6, 2, -9, -2, 10, 11, 5, -2, -2};
+
+        jedis.set(key, "0");
+        assertEquals(0, Integer.parseInt(jedis.get(key)));
+
+        //Increase counts concurrently
+        ExecutorService pool = Executors.newCachedThreadPool();
+        Set<Future> futues = new HashSet<>();
+        for (int i : count) {
+            futues.add(pool.submit(() -> {
+                Jedis client = new Jedis(jedis.getClient().getHost(), jedis.getClient().getPort());
+                client.incrBy(key, i);
+                client.close();
+            }));
+        }
+
+
+        for (Future futue : futues) {
+            futue.get();
+        }
+
+        //Check final count
+        assertEquals(25, Integer.parseInt(jedis.get(key)));
     }
 
 }

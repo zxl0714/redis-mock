@@ -21,11 +21,11 @@ public class RedisBase {
 
     public RedisBase() {}
 
-    public synchronized void addSyncBase(RedisBase base) {
+    public void addSyncBase(RedisBase base) {
         syncBases.add(base);
     }
 
-    public synchronized Slice rawGet(Slice key) {
+    public Slice rawGet(Slice key) {
         Preconditions.checkNotNull(key);
 
         Long deadline = deadlines.get(key);
@@ -37,7 +37,7 @@ public class RedisBase {
         return base.get(key);
     }
 
-    public synchronized Long getTTL(Slice key) {
+    public Long getTTL(Slice key) {
         Preconditions.checkNotNull(key);
 
         Long deadline = deadlines.get(key);
@@ -56,7 +56,7 @@ public class RedisBase {
         return null;
     }
 
-    public synchronized long setTTL(Slice key, long ttl) {
+    public long setTTL(Slice key, long ttl) {
         Preconditions.checkNotNull(key);
 
         if (base.containsKey(key)) {
@@ -69,7 +69,7 @@ public class RedisBase {
         return 0L;
     }
 
-    public synchronized long setDeadline(Slice key, long deadline) {
+    public long setDeadline(Slice key, long deadline) {
         Preconditions.checkNotNull(key);
 
         if (base.containsKey(key)) {
@@ -89,7 +89,7 @@ public class RedisBase {
         syncBases.clear();
     }
 
-    public synchronized void rawPut(Slice key, Slice value, Long ttl) {
+    public void rawPut(Slice key, Slice value, Long ttl) {
         Preconditions.checkNotNull(key);
         Preconditions.checkNotNull(value);
 
@@ -106,7 +106,7 @@ public class RedisBase {
         }
     }
 
-    public synchronized void del(Slice key) {
+    public void del(Slice key) {
         Preconditions.checkNotNull(key);
 
         base.remove(key);
@@ -117,7 +117,7 @@ public class RedisBase {
         }
     }
 
-    public synchronized void addSubscriber(Slice channel, RedisClient client){
+    public void addSubscriber(Slice channel, RedisClient client){
         Set<RedisClient> newClient = new HashSet<>();
         newClient.add(client);
         subscribers.merge(channel, newClient, (currentSubscribers, newSubscribers) -> {
@@ -126,7 +126,7 @@ public class RedisBase {
         });
     }
 
-    public synchronized boolean removeSubscriber(Slice channel, RedisClient client){
+    public boolean removeSubscriber(Slice channel, RedisClient client){
         if(subscribers.containsKey(channel)){
             subscribers.get(channel).remove(client);
             return true;
