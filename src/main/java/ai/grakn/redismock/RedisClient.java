@@ -2,13 +2,15 @@ package ai.grakn.redismock;
 
 import ai.grakn.redismock.commands.RedisOperationExecutor;
 import ai.grakn.redismock.expecptions.EOFException;
-import ai.grakn.redismock.expecptions.ParseErrorException;
 import com.google.common.base.Preconditions;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 ;
 
@@ -16,7 +18,8 @@ import java.net.Socket;
  * Created by Xiaolu on 2015/4/18.
  */
 public class RedisClient implements Runnable {
-
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(RedisClient.class);
+    private final AtomicBoolean running;
     private final RedisOperationExecutor executor;
     private final Socket socket;
     private final ServiceOptions options;
@@ -33,40 +36,65 @@ public class RedisClient implements Runnable {
         this.options = options;
         this.in = socket.getInputStream();
         this.out = socket.getOutputStream();
+        this.running = new AtomicBoolean(true);
     }
 
     public void run() {
         int count = 0;
-        while (true) {
-            try {
-                RedisCommand command = RedisCommandParser.parse(in);
-                Slice response = executor.execCommand(command);
-                sendResponse(response);
+        while (running.get()) {
+            Optional<RedisCommand> command = nextCommand();
+
+            if(command.isPresent()){
+                Slice response = executor.execCommand(command.get());
+                sendResponse(response, command.toString());
 
                 count++;
                 if (options.getCloseSocketAfterSeveralCommands() != 0
                         && options.getCloseSocketAfterSeveralCommands() == count) {
                     break;
                 }
-            } catch (IOException e) {
-                // Do nothing
-                break;
-            } catch (ParseErrorException e) {
-                // TODO return error
-            } catch (EOFException e) {
-                break;
             }
         }
+
+        LOG.debug("Mock redis connection shutting down.");
     }
 
-    public void sendResponse(Slice response) throws IOException {
-        if(!response.equals(Response.SKIP)) {
-            out.write(response.data());
-            out.flush();
+    /**
+     * Gets the next command on the stream if one has been issued
+     *
+     * @return The next command on the stream if one was issues
+     */
+    private Optional<RedisCommand> nextCommand(){
+        try {
+            return Optional.of(RedisCommandParser.parse(in));
+        } catch (EOFException e) {
+            //IGNORED often there will be nothing on the stream
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Send a response due to a specific command.
+     *
+     * @param response The respond to send.
+     * @param respondingTo The reason for sending this response
+     */
+    public void sendResponse(Slice response, String respondingTo) {
+        try {
+            if (!response.equals(Response.SKIP)) {
+                out.write(response.data());
+            }
+        } catch (IOException e){
+            LOG.error("unable to send [" + response + "] as response to [" + respondingTo +"]", e);
         }
     }
 
+    /**
+     * Close all the streams used by this client effectively closing the client.
+     * Also signals the client to stop working.
+     */
     public void close(){
+        running.set(false);
         Utils.closeQuietly(socket);
         Utils.closeQuietly(in);
         Utils.closeQuietly(out);

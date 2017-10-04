@@ -70,7 +70,7 @@ public class Response {
     }
 
     public static Slice unsubscribe(Slice channel, int remainingSubscriptions){
-        Slice operation = SliceParser.consumeParameter("$9\r\nunsubscribe\r\n".getBytes(StandardCharsets.UTF_8));
+        Slice operation = SliceParser.consumeParameter("$11\r\nunsubscribe\r\n".getBytes(StandardCharsets.UTF_8));
 
         List<Slice> slices = new ArrayList<>();
         slices.add(Response.bulkString(operation));

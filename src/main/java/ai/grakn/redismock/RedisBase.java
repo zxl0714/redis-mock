@@ -1,8 +1,6 @@
 package ai.grakn.redismock;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,19 +8,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Xiaolu on 2015/4/20.
  */
 public class RedisBase {
-    private final Map<Slice, Set<RedisClient>> subscribers = Maps.newHashMap();
-    private final Map<Slice, Slice> base = Maps.newHashMap();
-    private final Map<Slice, Long> deadlines = Maps.newHashMap();
-    private final List<RedisBase> syncBases = Lists.newArrayList();
+    private final Map<Slice, Set<RedisClient>> subscribers = new ConcurrentHashMap<>();
+    private final Map<Slice, Slice> base = new ConcurrentHashMap<>();
+    private final Map<Slice, Long> deadlines = new ConcurrentHashMap<>();
+    private final Set<RedisBase> syncBases = ConcurrentHashMap.newKeySet();
 
     public RedisBase() {}
 
-    public void addSyncBase(RedisBase base) {
+    public synchronized void addSyncBase(RedisBase base) {
         syncBases.add(base);
     }
 
@@ -83,7 +82,7 @@ public class RedisBase {
         return 0L;
     }
 
-    public synchronized void clear(){
+    public void clear(){
         base.clear();
         subscribers.clear();
         deadlines.clear();
@@ -127,10 +126,12 @@ public class RedisBase {
         });
     }
 
-    public synchronized void removeSubscriber(Slice channel, RedisClient client){
+    public synchronized boolean removeSubscriber(Slice channel, RedisClient client){
         if(subscribers.containsKey(channel)){
             subscribers.get(channel).remove(client);
+            return true;
         }
+        return false;
     }
 
     public Set<RedisClient> getSubscribers(Slice channel){
