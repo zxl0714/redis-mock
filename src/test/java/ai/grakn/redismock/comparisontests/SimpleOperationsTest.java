@@ -163,4 +163,25 @@ public class SimpleOperationsTest extends ComparisonBase {
         assertEquals("PONG", jedis.ping());
     }
 
+    @Theory
+    public void whenGettingKeys_EnsureCorrectKeysAreReturned(Jedis jedis){
+        jedis.flushAll();
+        jedis.mset("one", "1", "two", "2", "three", "3", "four", "4");
+
+        //Check simple pattern
+        Set<String> results = jedis.keys("*o*");
+        assertEquals(3, results.size());
+        assertTrue(results.contains("one") && results.contains("two") && results.contains("four"));
+
+        //Another simple regex
+        results = jedis.keys("t??");
+        assertEquals(1, results.size());
+        assertTrue(results.contains("two"));
+
+        //All Keys
+        results = jedis.keys("*");
+        assertEquals(4, results.size());
+        assertTrue(results.contains("one") && results.contains("two") && results.contains("three") && results.contains("four"));
+    }
+
 }

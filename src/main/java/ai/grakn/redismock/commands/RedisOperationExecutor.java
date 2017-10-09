@@ -125,6 +125,8 @@ public class RedisOperationExecutor {
                 return new RO_exec(base, transaction, params);
             case "ping":
                 return new RO_ping(base, params);
+            case "keys":
+                return new RO_keys(base, params);
             default:
                 throw new UnsupportedOperationException(String.format("Unsupported operation '%s'", name));
         }

@@ -25,6 +25,10 @@ public class RedisBase {
         syncBases.add(base);
     }
 
+    public Set<Slice> keys(){
+        return base.keySet();
+    }
+
     public Slice rawGet(Slice key) {
         Preconditions.checkNotNull(key);
 
