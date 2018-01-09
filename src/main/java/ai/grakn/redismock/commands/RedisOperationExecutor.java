@@ -5,15 +5,13 @@ import ai.grakn.redismock.RedisClient;
 import ai.grakn.redismock.RedisCommand;
 import ai.grakn.redismock.Response;
 import ai.grakn.redismock.Slice;
-import ai.grakn.redismock.expecptions.WrongNumberOfArgumentsException;
-import ai.grakn.redismock.expecptions.WrongValueTypeException;
+import ai.grakn.redismock.exception.WrongNumberOfArgumentsException;
+import ai.grakn.redismock.exception.WrongValueTypeException;
 import com.google.common.base.Preconditions;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Created by Xiaolu on 2015/4/20.
@@ -137,7 +135,7 @@ public class RedisOperationExecutor {
 
         List<Slice> params = command.getParameters();
         List<Slice> commandParams = params.subList(1, params.size());
-        String name = new String(params.get(0).data(), StandardCharsets.UTF_8).toLowerCase(Locale.ROOT);
+        String name = new String(params.get(0).data()).toLowerCase();
 
         try {
             //Transaction handling

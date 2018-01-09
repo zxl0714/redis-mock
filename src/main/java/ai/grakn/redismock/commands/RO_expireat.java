@@ -4,7 +4,6 @@ import ai.grakn.redismock.RedisBase;
 import ai.grakn.redismock.Response;
 import ai.grakn.redismock.Slice;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static ai.grakn.redismock.Utils.convertToLong;
@@ -15,7 +14,7 @@ class RO_expireat extends AbstractRedisOperation {
     }
 
     Slice response() {
-        long deadline = convertToLong(new String(params().get(1).data(), StandardCharsets.UTF_8)) * 1000;
+        long deadline = convertToLong(new String(params().get(1).data())) * 1000;
         return Response.integer(base().setDeadline(params().get(0), deadline));
     }
 }

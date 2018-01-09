@@ -4,7 +4,6 @@ import ai.grakn.redismock.RedisBase;
 import ai.grakn.redismock.Response;
 import ai.grakn.redismock.Slice;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,7 +19,7 @@ class RO_lrem extends AbstractRedisOperation {
 
     Slice response(){
         Slice key = params().get(0);
-        int numRemove = convertToInteger(new String(params().get(1).data(), StandardCharsets.UTF_8));
+        int numRemove = convertToInteger(new String(params().get(1).data()));
         Slice target = params().get(2);
         Slice data = base().rawGet(key);
 

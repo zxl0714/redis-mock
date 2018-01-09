@@ -1,7 +1,7 @@
 package ai.grakn.redismock;
 
-import ai.grakn.redismock.expecptions.EOFException;
-import ai.grakn.redismock.expecptions.ParseErrorException;
+import ai.grakn.redismock.exception.EOFException;
+import ai.grakn.redismock.exception.ParseErrorException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;

@@ -1,7 +1,7 @@
 package ai.grakn.redismock;
 
 import ai.grakn.redismock.commands.RedisOperationExecutor;
-import ai.grakn.redismock.expecptions.EOFException;
+import ai.grakn.redismock.exception.EOFException;
 import com.google.common.base.Preconditions;
 import org.slf4j.LoggerFactory;
 

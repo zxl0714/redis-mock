@@ -3,7 +3,7 @@ package ai.grakn.redismock.commands;
 import ai.grakn.redismock.RedisBase;
 import ai.grakn.redismock.Response;
 import ai.grakn.redismock.Slice;
-import ai.grakn.redismock.expecptions.InternalException;
+import ai.grakn.redismock.exception.InternalException;
 import com.google.common.collect.Lists;
 
 import java.util.LinkedList;

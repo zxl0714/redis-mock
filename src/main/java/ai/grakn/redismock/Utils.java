@@ -1,8 +1,8 @@
 package ai.grakn.redismock;
 
-import ai.grakn.redismock.expecptions.InternalException;
-import ai.grakn.redismock.expecptions.WrongNumberOfArgumentsException;
-import ai.grakn.redismock.expecptions.WrongValueTypeException;
+import ai.grakn.redismock.exception.InternalException;
+import ai.grakn.redismock.exception.WrongNumberOfArgumentsException;
+import ai.grakn.redismock.exception.WrongValueTypeException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

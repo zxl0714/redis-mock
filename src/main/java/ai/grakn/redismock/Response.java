@@ -4,7 +4,6 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,9 +23,9 @@ public class Response {
             return NULL;
         }
         ByteArrayDataOutput bo = ByteStreams.newDataOutput();
-        bo.write(String.format("$%d\r%n", s.length()).getBytes(StandardCharsets.UTF_8));
+        bo.write(String.format("$%d\r%n", s.length()).getBytes());
         bo.write(s.data());
-        bo.write("\r\n".getBytes(StandardCharsets.UTF_8));
+        bo.write("\r\n".getBytes());
         return new Slice(bo.toByteArray());
     }
 
@@ -40,7 +39,7 @@ public class Response {
 
     public static Slice array(List<Slice> values) {
         ByteArrayDataOutput bo = ByteStreams.newDataOutput();
-        bo.write(String.format("*%d\r%n", values.size()).getBytes(StandardCharsets.UTF_8));
+        bo.write(String.format("*%d\r%n", values.size()).getBytes());
         for (Slice value : values) {
             bo.write(value.data());
         }
@@ -48,7 +47,7 @@ public class Response {
     }
 
     public static Slice publishedMessage(Slice channel, Slice message){
-        Slice operation = SliceParser.consumeParameter("$7\r\nmessage\r\n".getBytes(StandardCharsets.UTF_8));
+        Slice operation = SliceParser.consumeParameter("$7\r\nmessage\r\n".getBytes());
 
         List<Slice> slices = new ArrayList<>();
         slices.add(Response.bulkString(operation));
@@ -59,7 +58,7 @@ public class Response {
     }
 
     public static Slice subscribedToChannel(List<Slice> channels){
-        Slice operation = SliceParser.consumeParameter("$9\r\nsubscribe\r\n".getBytes(StandardCharsets.UTF_8));
+        Slice operation = SliceParser.consumeParameter("$9\r\nsubscribe\r\n".getBytes());
 
         List<Slice> slices = new ArrayList<>();
         slices.add(Response.bulkString(operation));
@@ -70,7 +69,7 @@ public class Response {
     }
 
     public static Slice unsubscribe(Slice channel, int remainingSubscriptions){
-        Slice operation = SliceParser.consumeParameter("$11\r\nunsubscribe\r\n".getBytes(StandardCharsets.UTF_8));
+        Slice operation = SliceParser.consumeParameter("$11\r\nunsubscribe\r\n".getBytes());
 
         List<Slice> slices = new ArrayList<>();
         slices.add(Response.bulkString(operation));

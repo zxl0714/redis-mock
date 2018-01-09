@@ -4,7 +4,6 @@ import ai.grakn.redismock.RedisBase;
 import ai.grakn.redismock.Response;
 import ai.grakn.redismock.Slice;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,10 +14,10 @@ class RO_keys extends AbstractRedisOperation {
 
     Slice response() {
         List<Slice> matchingKeys = new ArrayList<>();
-        String regex = createRegexFromGlob(new String(params().get(0).data(), StandardCharsets.UTF_8));
+        String regex = createRegexFromGlob(new String(params().get(0).data()));
 
         base().keys().forEach(keyData -> {
-            String key = new String(keyData.data(), StandardCharsets.UTF_8);
+            String key = new String(keyData.data());
             if(key.matches(regex)){
                 matchingKeys.add(Response.bulkString(keyData));
             }
