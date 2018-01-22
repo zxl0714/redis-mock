@@ -8,6 +8,7 @@ import redis.clients.jedis.Client;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -182,6 +183,33 @@ public class SimpleOperationsTest extends ComparisonBase {
         results = jedis.keys("*");
         assertEquals(4, results.size());
         assertTrue(results.contains("one") && results.contains("two") && results.contains("three") && results.contains("four"));
+    }
+
+    @Theory
+    public void whenAddingToASet_EnsureTheSetIsUpdated(Jedis jedis){
+        String key = "my-set-key";
+        Set<String> mySet = new HashSet<>(Arrays.asList("a", "b", "c", "d"));
+
+        //Add everything from the set
+        mySet.forEach(value -> jedis.sadd(key, value));
+
+        //Get it all back
+        assertEquals(mySet, jedis.smembers(key));
+    }
+
+    @Theory
+    public void whenPoppingFromASet_EnsureTheSetIsUpdated(Jedis jedis){
+        String key = "my-set-key";
+        Set<String> mySet = new HashSet<>(Arrays.asList("a", "b", "c", "d"));
+
+        //Add everything from the set
+        mySet.forEach(value -> jedis.sadd(key, value));
+
+        String poppedValue;
+        do {
+            poppedValue = jedis.spop(key);
+            if(poppedValue != null) assertTrue("Popped value not in set", mySet.contains(poppedValue));
+        } while (poppedValue != null);
     }
 
 }
