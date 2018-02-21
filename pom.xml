@@ -10,7 +10,7 @@
 
     <groupId>ai.grakn</groupId>
     <artifactId>redis-mock</artifactId>
-    <version>0.1.5</version>
+    <version>0.1.6</version>
     <packaging>jar</packaging>
     <name>redis-mock</name>
     <description>In memory Redis mock for testing</description>
