@@ -12,8 +12,10 @@ import java.util.List;
  */
 public class Response {
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Response.class);
-    public static final Slice OK = new Slice("+OK\r\n");
-    public static final Slice NULL = new Slice("$-1\r\n");
+    private static final String LINE_SEPARATOR = "\r\n";
+
+    public static final Slice OK = new Slice("+OK" + LINE_SEPARATOR);
+    public static final Slice NULL = new Slice("$-1" + LINE_SEPARATOR);
     public static final Slice SKIP = new Slice("Skip this submission");
 
     private Response() {}
@@ -23,23 +25,23 @@ public class Response {
             return NULL;
         }
         ByteArrayDataOutput bo = ByteStreams.newDataOutput();
-        bo.write(String.format("$%d\r%n", s.length()).getBytes());
+        bo.write(String.format("$%d%s", s.length(), LINE_SEPARATOR).getBytes());
         bo.write(s.data());
-        bo.write("\r\n".getBytes());
+        bo.write(LINE_SEPARATOR.getBytes());
         return new Slice(bo.toByteArray());
     }
 
     public static Slice error(String s) {
-        return new Slice(String.format("-%s\r%n", s));
+        return new Slice(String.format("-%s%s", s, LINE_SEPARATOR));
     }
 
     public static Slice integer(long v) {
-        return new Slice(String.format(":%d\r%n", v));
+        return new Slice(String.format(":%d%s", v, LINE_SEPARATOR));
     }
 
     public static Slice array(List<Slice> values) {
         ByteArrayDataOutput bo = ByteStreams.newDataOutput();
-        bo.write(String.format("*%d\r%n", values.size()).getBytes());
+        bo.write(String.format("*%d%s", values.size(), LINE_SEPARATOR).getBytes());
         for (Slice value : values) {
             bo.write(value.data());
         }
