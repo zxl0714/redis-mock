@@ -9,8 +9,11 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -210,6 +213,266 @@ public class SimpleOperationsTest extends ComparisonBase {
             poppedValue = jedis.spop(key);
             if(poppedValue != null) assertTrue("Popped value not in set", mySet.contains(poppedValue));
         } while (poppedValue != null);
+    }
+
+    @Theory
+    public void whenMultiAddingToAHash_EnsureTheHashIsUpdated(Jedis jedis) {
+        String key = "my-hash-key";
+        Map<String, String> myHash = new HashMap<>();
+        myHash.put("a", "1");
+        myHash.put("b", "2");
+        myHash.put("c", "3");
+        myHash.put("d", "4");
+
+        // Add everything from the set
+        jedis.hmset(key, myHash);
+
+        // Get it all back
+        assertEquals(myHash, jedis.hgetAll(key));
+    }
+
+    @Theory
+    public void whenMultiAddingToAnExistingHash_EnsureTheHashIsUpdated(Jedis jedis) {
+        String key = "my-hash-key";
+        Map<String, String> myHash = new HashMap<>();
+        myHash.put("a", "1");
+        myHash.put("b", "2");
+        myHash.put("c", "3");
+        myHash.put("d", "4");
+
+        // Add everything from the set
+        jedis.hmset(key, myHash);
+
+        Map<String, String> myHash2 = new HashMap<>();
+        myHash2.put("c", "1");
+        myHash2.put("d", "2");
+        myHash2.put("e", "3");
+        myHash2.put("f", "4");
+
+        // Update the hash with new values
+        jedis.hmset(key, myHash);
+
+        // Get it all back
+        Map<String, String> expected = new HashMap<>();
+        expected.put("a", "1");
+        expected.put("b", "2");
+        expected.put("c", "1");
+        expected.put("d", "2");
+        expected.put("e", "3");
+        expected.put("f", "4");
+
+        assertEquals(myHash, jedis.hgetAll(key));
+    }
+
+    @Theory
+    public void whenDeletingFromAHash_EnsureTheHashIsUpdated(Jedis jedis) {
+        String key = "my-hash-key";
+        Map<String, String> myHash = new HashMap<>();
+        myHash.put("a", "1");
+        myHash.put("b", "2");
+        myHash.put("c", "3");
+        myHash.put("d", "4");
+
+        // Add everything from the set
+        jedis.hmset(key, myHash);
+
+        // Delete an entry
+        assertEquals(Long.valueOf(1), jedis.hdel(key, "c"));
+
+        // Check the result
+        Map<String, String> expected = new HashMap<>();
+        expected.put("a", "1");
+        expected.put("b", "2");
+        expected.put("d", "4");
+        assertEquals(expected, jedis.hgetAll(key));
+    }
+
+    @Theory
+    public void whenDeletingMissingKeyFromAHash_EnsureThatNothingHappens(Jedis jedis) {
+        String key = "my-hash-key";
+        Map<String, String> myHash = new HashMap<>();
+        myHash.put("a", "1");
+        myHash.put("b", "2");
+        myHash.put("c", "3");
+        myHash.put("d", "4");
+
+        // Add everything from the set
+        jedis.hmset(key, myHash);
+
+        // Delete an entry
+        assertEquals(Long.valueOf(0), jedis.hdel(key, "e"));
+
+        // Check the result
+        assertEquals(myHash, jedis.hgetAll(key));
+    }
+
+    @Theory
+    public void whenRequestingKeys_EnsureThatCorrectResultIsReturned(Jedis jedis) {
+        String key = "my-hash-key";
+        Map<String, String> myHash = new HashMap<>();
+        myHash.put("a", "1");
+        myHash.put("b", "2");
+        myHash.put("c", "3");
+        myHash.put("d", "4");
+
+        // Add everything from the set
+        jedis.hmset(key, myHash);
+
+        // Check the result
+        assertEquals(new HashSet<>(Arrays.asList("a", "b", "c", "d")), jedis.hkeys(key));
+    }
+    
+    @Theory
+    public void whenRequestingValues_EnsureThatCorrectResultIsReturned(Jedis jedis) {
+        String key = "my-hash-key";
+        Map<String, String> myHash = new HashMap<>();
+        myHash.put("a", "1");
+        myHash.put("b", "2");
+        myHash.put("c", "3");
+        myHash.put("d", "4");
+
+        // Add everything from the set
+        jedis.hmset(key, myHash);
+
+        // Check the result
+        List<String> result = jedis.hvals(key);
+        Collections.sort(result); // Make test repeatable
+        assertEquals(Arrays.asList("1", "2", "3", "4"), result);
+    }
+    
+    @Theory
+    public void whenRequestingMultipleValues_EnsureThatCorrectResultIsReturned(Jedis jedis) {
+        String key = "my-hash-key";
+        Map<String, String> myHash = new HashMap<>();
+        myHash.put("a", "1");
+        myHash.put("b", "2");
+        myHash.put("c", "3");
+        myHash.put("d", "4");
+
+        // Add everything from the set
+        jedis.hmset(key, myHash);
+
+        // Check the result
+        List<String> result = jedis.hmget(key, "b", "d");
+        Collections.sort(result); // Make test repeatable
+        assertEquals(Arrays.asList("2", "4"), result);
+    }
+    
+    @Theory
+    public void whenRequestingLength_EnsureThatCorrectResultIsReturned(Jedis jedis) {
+        String key = "my-hash-key";
+        Map<String, String> myHash = new HashMap<>();
+        myHash.put("a", "1");
+        myHash.put("b", "2");
+        myHash.put("c", "3");
+        myHash.put("d", "4");
+
+        // Add everything from the set
+        jedis.hmset(key, myHash);
+
+        // Check the result
+        assertEquals(Long.valueOf(4), jedis.hlen(key));
+    }
+
+    @Theory
+    public void whenKeyExists_EnsureThatCorrectResultIsReturned(Jedis jedis) {
+        String key = "my-hash-key";
+        Map<String, String> myHash = new HashMap<>();
+        myHash.put("a", "1");
+
+        // Add everything from the set
+        jedis.hmset(key, myHash);
+
+        // Check the result
+        assertEquals(true, jedis.hexists(key, "a"));
+    }
+
+    @Theory
+    public void whenKeyDoesNotExist_EnsureThatCorrectResultIsReturned(Jedis jedis) {
+        String key = "my-hash-key2";
+        Map<String, String> myHash = new HashMap<>();
+        myHash.put("a", "1");
+
+        // Add everything from the set
+        jedis.hmset(key, myHash);
+
+        // Check the result
+        assertEquals(false, jedis.hexists(key, "b"));
+    }
+
+    @Theory
+    public void whenGetByKey_EnsureThatCorrectResultIsReturned(Jedis jedis) {
+        String key = "my-hash-key";
+        Map<String, String> myHash = new HashMap<>();
+        myHash.put("a", "1");
+
+        // Add everything from the set
+        jedis.hmset(key, myHash);
+
+        // Check the result
+        assertEquals("1", jedis.hget(key, "a"));
+    }
+
+    @Theory
+    public void whenGetByMissingKey_EnsureThatNullIsReturned(Jedis jedis) {
+        String key = "my-hash-key";
+
+        // Check the result
+        assertEquals(null, jedis.hget(key, "zzz"));
+    }
+
+    @Theory
+    public void whenSetNewKey_EnsureThat1IsReturned(Jedis jedis) {
+        String key = "my-hash-key3";
+
+        // Add to the set
+        assertEquals(Long.valueOf(1), jedis.hset(key, "b", "2"));
+
+        // Check the result
+        assertEquals("2", jedis.hget(key, "b"));
+    }
+
+    @Theory
+    public void whenSetExistingKey_EnsureThat0IsReturned(Jedis jedis) {
+        String key = "my-hash-key3";
+        Map<String, String> myHash = new HashMap<>();
+        myHash.put("a", "1");
+
+        // Add everything from the set
+        jedis.hmset(key, myHash);
+
+        // Add to the set
+        assertEquals(Long.valueOf(0), jedis.hset(key, "a", "2"));
+
+        // Check the result
+        assertEquals("2", jedis.hget(key, "a"));
+    }
+    
+    @Theory
+    public void whenSetWhenNotExistsNewKey_EnsureThat1IsReturned(Jedis jedis) {
+        String key = "my-hash-key4";
+
+        // Add to the set
+        assertEquals(Long.valueOf(1), jedis.hsetnx(key, "b", "2"));
+
+        // Check the result
+        assertEquals("2", jedis.hget(key, "b"));
+    }
+
+    @Theory
+    public void whenSetWhenNotExistsExistingKey_EnsureThat0IsReturned(Jedis jedis) {
+        String key = "my-hash-key4";
+        Map<String, String> myHash = new HashMap<>();
+        myHash.put("a", "1");
+
+        // Add everything from the set
+        jedis.hmset(key, myHash);
+
+        // Add to the set
+        assertEquals(Long.valueOf(0), jedis.hsetnx(key, "a", "2"));
+
+        // Check the result
+        assertEquals("1", jedis.hget(key, "a"));
     }
 
 }
