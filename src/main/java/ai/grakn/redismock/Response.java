@@ -2,11 +2,12 @@ package ai.grakn.redismock;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created by Xiaolu on 2015/4/20.
