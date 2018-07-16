@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Created by Xiaolu on 2015/4/20.
@@ -46,6 +48,17 @@ public class Response {
             bo.write(value.data());
         }
         return new Slice(bo.toByteArray());
+    }
+    
+    public static Slice map(Map<Slice, Slice> values) {
+        List<Slice> slices = new ArrayList<>();
+       
+        for (Entry<Slice, Slice> value : values.entrySet()) {
+            slices.add(bulkString(value.getKey()));
+            slices.add(bulkString(value.getValue()));
+        }
+        
+        return array(slices);
     }
 
     public static Slice publishedMessage(Slice channel, Slice message){

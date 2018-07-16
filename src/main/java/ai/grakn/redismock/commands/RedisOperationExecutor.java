@@ -131,6 +131,28 @@ public class RedisOperationExecutor {
                 return new RO_smembers(base, params);
             case "spop":
                 return new RO_spop(base, params);
+            case "hdel":
+                return new RO_hdel(base, params);
+            case "hexists":
+                return new RO_hexists(base, params);
+            case "hget":
+                return new RO_hget(base, params);
+            case "hgetall":
+                return new RO_hgetall(base, params);
+            case "hkeys":
+                return new RO_hkeys(base, params);
+            case "hlen":
+                return new RO_hlen(base, params);
+            case "hmget":
+                return new RO_hmget(base, params);
+            case "hmset":
+                return new RO_hmset(base, params);
+            case "hset":
+                return new RO_hset(base, params);
+            case "hsetnx":
+                return new RO_hsetnx(base, params);
+            case "hvals":
+                return new RO_hvals(base, params);
             default:
                 throw new UnsupportedOperationException(String.format("Unsupported operation '%s'", name));
         }
