@@ -31,7 +31,7 @@ public class RO_zrem extends AbstractRedisOperation {
             return Response.NULL;
         }
         Iterator<Slice> it = set.iterator();
-        Slice v = it.next();
+        it.next();
         it.remove();
         base().rawPut(key, serializeObject(set), -1L);
         return Response.integer(1);
