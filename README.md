@@ -1,21 +1,25 @@
-# redis-mock
+[![GitHub release](https://img.shields.io/github/release/graknlabs/redis-mock.svg)](https://github.com/graknlabs/redis-mock/releases/latest)
+[![Build Status](https://travis-ci.org/graknlabs/redis-mock.svg?branch=master)](https://travis-ci.org/graknlabs/redis-mock)
+[![Slack Status](http://grakn-slackin.herokuapp.com/badge.svg)](https://grakn.ai/slack)
 
-A simple redis java mock for unit testing.
+# Redis-Mock
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.zxl0714/redis-mock/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.zxl0714/redis-mock)
+Redis Mock is a simple in-memory mock of redis for java testing. 
+It allows you to test any behaviour dependent on redis without having to deploy an instance of redis
 
+## Quickstart 
+
+Add it as a dependency in Maven as:
 
 ```xml
 <dependency>
-  <groupId>com.github.zxl0714</groupId>
+  <groupId>ai.grakn</groupId>
   <artifactId>redis-mock</artifactId>
-  <version>0.1</version>
+  <version>0.1.6</version>
 </dependency>
 ```
 
-## How to use it
-
-The very simple way.
+Create a redis server and bind it to jedis:
 
 ```
 private static RedisServer server = null;
@@ -23,6 +27,7 @@ private static RedisServer server = null;
 @Before
 public void before() throws IOException {
   server = RedisServer.newRedisServer();  // bind to a random port
+  server.start();
 }
 
 @Test
@@ -38,6 +43,8 @@ public void after() {
   server = null;
 }
 ```
+
+From here test as needed
 
 ## Master and Slave
 
@@ -59,58 +66,3 @@ server.setOptions(options);
 server.start();
 ```
 
-## Support Commands
-
-strlen
-
-get
-
-append
-
-exists
-
-set
-
-ttl
-
-decrby
-
-pfadd
-
-pfmerge
-
-mget
-
-mset
-
-getset
-
-del
-
-expireat
-
-pexpireat
-
-setex
-
-psetex
-
-setnx
-
-setbit
-
-getbit
-
-pttl
-
-expire
-
-pexpire
-
-incr
-
-incrby
-
-decr
-
-pfcount

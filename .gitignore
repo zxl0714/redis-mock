@@ -1,0 +1,24 @@
+# Mac files #
+.DS_Store
+
+# IDE files #
+.idea/
+*.iml
+*.geany
+
+# Compiled files #
+out/
+target/
+*.class
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# Debug files #
+dep.tree
+
