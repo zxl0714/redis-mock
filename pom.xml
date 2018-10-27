@@ -8,13 +8,13 @@
         <version>7</version>
     </parent>
 
-    <groupId>ai.grakn</groupId>
-    <artifactId>redis-mock</artifactId>
+    <groupId>org.fppt</groupId>
+    <artifactId>jedis-mock</artifactId>
     <version>0.1.6</version>
     <packaging>jar</packaging>
-    <name>redis-mock</name>
+    <name>jedis-mock</name>
     <description>In memory Redis mock for testing</description>
-    <url>https://github.com/graknlabs/redis-mock</url>
+    <url>https://github.com/fppt/jedis-mock</url>
     <prerequisites>
         <maven>3.0.0</maven>
     </prerequisites>
@@ -23,10 +23,10 @@
         <developer>
             <id>fppt</id>
             <name>Filipe Peliz Pinto Teixeira</name>
-            <email>filipe@grakn.ai</email>
+            <email>fppintoteixeira@gmail.com</email>
         </developer>
 
-        <!-- Original developer of library no longer maintaining project -->
+        <!-- Original developer of library no longer maintaining project (Kudos To You Sir!!)-->
         <developer>
             <id>zxl0714</id>
             <name>zxl0714</name>

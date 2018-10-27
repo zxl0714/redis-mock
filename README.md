@@ -1,6 +1,5 @@
-[![GitHub release](https://img.shields.io/github/release/graknlabs/redis-mock.svg)](https://github.com/graknlabs/redis-mock/releases/latest)
-[![Build Status](https://travis-ci.org/graknlabs/redis-mock.svg?branch=master)](https://travis-ci.org/graknlabs/redis-mock)
-[![Slack Status](http://grakn-slackin.herokuapp.com/badge.svg)](https://grakn.ai/slack)
+[![GitHub release](https://img.shields.io/github/release/fppt/jedis-mock.svg)](https://github.com/fppt/jedis-mock/releases/latest)
+[![Build Status](https://travis-ci.org/fppt/jedis-mock.svg?branch=master)](https://travis-ci.org/graknlabs/jedis-mock)
 
 # Redis-Mock
 
@@ -13,9 +12,9 @@ Add it as a dependency in Maven as:
 
 ```xml
 <dependency>
-  <groupId>ai.grakn</groupId>
-  <artifactId>redis-mock</artifactId>
-  <version>0.1.6</version>
+  <groupId>org.fppt</groupId>
+  <artifactId>jedis-mock</artifactId>
+  <version>1.0.0</version>
 </dependency>
 ```
 
