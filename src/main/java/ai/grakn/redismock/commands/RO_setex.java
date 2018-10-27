@@ -4,7 +4,6 @@ import ai.grakn.redismock.RedisBase;
 import ai.grakn.redismock.Response;
 import ai.grakn.redismock.Slice;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static ai.grakn.redismock.Utils.convertToLong;
@@ -20,11 +19,10 @@ class RO_setex extends RO_set {
 
     @Override
     long valueToSet(List<Slice> params){
-        return convertToLong(new String(params.get(1).data(), StandardCharsets.UTF_8)) * 1000;
+        return convertToLong(new String(params.get(1).data())) * 1000;
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         base().rawPut(params().get(0), params().get(2), valueToSet(params()));
         return Response.OK;
     }

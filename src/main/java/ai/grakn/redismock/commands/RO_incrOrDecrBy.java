@@ -4,7 +4,6 @@ import ai.grakn.redismock.RedisBase;
 import ai.grakn.redismock.Response;
 import ai.grakn.redismock.Slice;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static ai.grakn.redismock.Utils.convertToLong;
@@ -16,8 +15,7 @@ abstract class RO_incrOrDecrBy extends AbstractRedisOperation {
 
     abstract long incrementOrDecrementValue(List<Slice> params);
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         Slice key = params().get(0);
         long d = incrementOrDecrementValue(params());
         Slice v = base().rawGet(key);
@@ -25,7 +23,8 @@ abstract class RO_incrOrDecrBy extends AbstractRedisOperation {
             base().rawPut(key, new Slice(String.valueOf(d)), -1L);
             return Response.integer(d);
         }
-        long r = convertToLong(new String(v.data(), StandardCharsets.UTF_8)) + d;
+
+        long r = convertToLong(new String(v.data())) + d;
         base().rawPut(key, new Slice(String.valueOf(r)), -1L);
         return Response.integer(r);
     }

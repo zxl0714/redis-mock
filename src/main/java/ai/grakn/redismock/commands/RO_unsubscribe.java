@@ -17,8 +17,7 @@ class RO_unsubscribe extends AbstractRedisOperation {
         this.client = client;
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         List<Slice> channelsToUbsubscribeFrom;
         if(params().isEmpty()){
             LOG.debug("No channels specified therefore unsubscribing from all channels");

@@ -14,8 +14,7 @@ class RO_publish extends AbstractRedisOperation {
         super(base, params,2, null, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response(){
         Slice channel = params().get(0);
         Slice message = params().get(1);
 

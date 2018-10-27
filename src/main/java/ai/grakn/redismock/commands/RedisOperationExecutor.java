@@ -5,16 +5,13 @@ import ai.grakn.redismock.RedisClient;
 import ai.grakn.redismock.RedisCommand;
 import ai.grakn.redismock.Response;
 import ai.grakn.redismock.Slice;
-import ai.grakn.redismock.expecptions.WrongNumberOfArgumentsException;
-import ai.grakn.redismock.expecptions.WrongValueTypeException;
+import ai.grakn.redismock.exception.WrongNumberOfArgumentsException;
+import ai.grakn.redismock.exception.WrongValueTypeException;
 import com.google.common.base.Preconditions;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
 /**
  * Created by Xiaolu on 2015/4/20.
@@ -23,11 +20,14 @@ public class RedisOperationExecutor {
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(RedisOperationExecutor.class);
     private final RedisClient owner;
     private final RedisBase base;
+    private boolean transactionModeOn;
     private List<RedisOperation> transaction;
 
     public RedisOperationExecutor(RedisBase base, RedisClient owner) {
         this.base = base;
         this.owner = owner;
+        transactionModeOn = false;
+        transaction = new ArrayList<>();
     }
 
     private RedisOperation buildSimpleOperation(String name, List<Slice> params){
@@ -118,6 +118,19 @@ public class RedisOperationExecutor {
                 return new RO_lrem(base, params);
             case "quit":
                 return new RO_quit(base, owner, params);
+            case "exec":
+                transactionModeOn = false;
+                return new RO_exec(base, transaction, params);
+            case "ping":
+                return new RO_ping(base, params);
+            case "keys":
+                return new RO_keys(base, params);
+            case "sadd":
+                return new RO_sadd(base, params);
+            case "smembers":
+                return new RO_smembers(base, params);
+            case "spop":
+                return new RO_spop(base, params);
             default:
                 throw new UnsupportedOperationException(String.format("Unsupported operation '%s'", name));
         }
@@ -128,21 +141,18 @@ public class RedisOperationExecutor {
 
         List<Slice> params = command.getParameters();
         List<Slice> commandParams = params.subList(1, params.size());
-        String name = new String(params.get(0).data(), StandardCharsets.UTF_8).toLowerCase(Locale.ROOT);
+        String name = new String(params.get(0).data()).toLowerCase();
 
         try {
             //Transaction handling
             if(name.equals("multi")){
                 newTransaction();
                 return Response.clientResponse(name, Response.OK);
-            } else if(name.equals("exec")){
-                return Response.clientResponse(name, commitTransaction());
             }
-
 
             //Checking if we mutating the transaction or the base
             RedisOperation redisOperation = buildSimpleOperation(name, commandParams);
-            if(transaction != null){
+            if(transactionModeOn){
                 transaction.add(redisOperation);
             } else {
                 return Response.clientResponse(name, redisOperation.execute());
@@ -159,27 +169,7 @@ public class RedisOperationExecutor {
     }
 
     private void newTransaction(){
-        if(transaction != null) throw new RuntimeException("Redis mock does not support more than one transaction");
-        transaction = new ArrayList<>();
-    }
-
-    private Slice commitTransaction(){
-        if (transaction == null) throw new RuntimeException("No transaction started");
-        List<Slice> results;
-        try {
-            results = transaction.stream().map(RedisOperation::execute).collect(Collectors.toList());
-        } catch (Throwable t){
-            LOG.error("ERROR during committing transaction", t);
-            return Response.NULL;
-        }
-        closeTransaction();
-        return Response.array(results);
-    }
-
-    private void closeTransaction(){
-        if (transaction != null){
-            transaction.clear();
-            transaction = null;
-        }
+        if(transactionModeOn) throw new RuntimeException("Redis mock does not support more than one transaction");
+        transactionModeOn = true;
     }
 }

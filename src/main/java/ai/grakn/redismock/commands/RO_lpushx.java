@@ -11,13 +11,12 @@ class RO_lpushx extends RO_lpush {
         super(base, params);
     }
 
-    @Override
-    public Slice execute(){
+    Slice response(){
         Slice key = params().get(0);
         Slice data = base().rawGet(key);
 
         if(data != null){
-            return super.execute();
+            return super.response();
         }
 
         return Response.integer(0);

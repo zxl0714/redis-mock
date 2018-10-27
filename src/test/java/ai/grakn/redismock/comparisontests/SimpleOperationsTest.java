@@ -8,7 +8,14 @@ import redis.clients.jedis.Client;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -122,6 +129,87 @@ public class SimpleOperationsTest extends ComparisonBase {
         expectedException.expect(JedisConnectionException.class);
 
         newJedis.set("A happy lucky key", "A sad value 2");
+    }
+
+    @Theory
+    public void whenConcurrentlyIncrementingAndDecrementingCount_EnsureFinalCountIsCorrect(Jedis jedis) throws ExecutionException, InterruptedException {
+        String key = "my-count-tracker";
+        int [] count = new int[]{1, 5, 6, 2, -9, -2, 10, 11, 5, -2, -2};
+
+        jedis.set(key, "0");
+        assertEquals(0, Integer.parseInt(jedis.get(key)));
+
+        //Increase counts concurrently
+        ExecutorService pool = Executors.newCachedThreadPool();
+        Set<Future> futues = new HashSet<>();
+        for (int i : count) {
+            futues.add(pool.submit(() -> {
+                Jedis client = new Jedis(jedis.getClient().getHost(), jedis.getClient().getPort());
+                client.incrBy(key, i);
+                client.close();
+            }));
+        }
+
+
+        for (Future futue : futues) {
+            futue.get();
+        }
+
+        //Check final count
+        assertEquals(25, Integer.parseInt(jedis.get(key)));
+    }
+
+    @Theory
+    public void whenPinging_Pong(Jedis jedis){
+        assertEquals("PONG", jedis.ping());
+    }
+
+    @Theory
+    public void whenGettingKeys_EnsureCorrectKeysAreReturned(Jedis jedis){
+        jedis.flushAll();
+        jedis.mset("one", "1", "two", "2", "three", "3", "four", "4");
+
+        //Check simple pattern
+        Set<String> results = jedis.keys("*o*");
+        assertEquals(3, results.size());
+        assertTrue(results.contains("one") && results.contains("two") && results.contains("four"));
+
+        //Another simple regex
+        results = jedis.keys("t??");
+        assertEquals(1, results.size());
+        assertTrue(results.contains("two"));
+
+        //All Keys
+        results = jedis.keys("*");
+        assertEquals(4, results.size());
+        assertTrue(results.contains("one") && results.contains("two") && results.contains("three") && results.contains("four"));
+    }
+
+    @Theory
+    public void whenAddingToASet_EnsureTheSetIsUpdated(Jedis jedis){
+        String key = "my-set-key";
+        Set<String> mySet = new HashSet<>(Arrays.asList("a", "b", "c", "d"));
+
+        //Add everything from the set
+        mySet.forEach(value -> jedis.sadd(key, value));
+
+        //Get it all back
+        assertEquals(mySet, jedis.smembers(key));
+    }
+
+    @Theory
+    public void whenPoppingFromASet_EnsureTheSetIsUpdated(Jedis jedis){
+        String key = "my-set-key";
+        Set<String> mySet = new HashSet<>(Arrays.asList("a", "b", "c", "d"));
+
+        //Add everything from the set
+        mySet.forEach(value -> jedis.sadd(key, value));
+
+        String poppedValue;
+        do {
+            poppedValue = jedis.spop(key);
+            if(poppedValue != null) assertTrue("Popped value not in set", mySet.contains(poppedValue));
+        } while (poppedValue != null);
     }
 
 }

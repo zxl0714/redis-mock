@@ -11,8 +11,7 @@ class RO_get extends AbstractRedisOperation {
         super(base, params, 1, null, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         return Response.bulkString(base().rawGet(params().get(0)));
     }
 }

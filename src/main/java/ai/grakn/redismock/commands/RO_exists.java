@@ -11,8 +11,7 @@ class RO_exists extends AbstractRedisOperation {
         super(base, params, 1, null, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         if (base().rawGet(params().get(0)) != null) {
             return Response.integer(1);
         }

@@ -17,8 +17,7 @@ class RO_rpoplpush extends AbstractRedisOperation {
         super(base, params, numExpected, null, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         Slice source = params().get(0);
         Slice target = params().get(1);
 

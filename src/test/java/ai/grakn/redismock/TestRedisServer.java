@@ -127,7 +127,6 @@ public class TestRedisServer {
     }
 
 
-
     @Test
     public void testCloseSocket() throws IOException {
         RedisServer server = RedisServer.newRedisServer();
@@ -144,6 +143,19 @@ public class TestRedisServer {
             assertTrue(false);
         } catch (JedisConnectionException e) {
             // OK
+        }
+    }
+
+    @Test
+    public void whenRepeatedlyStoppingAndStartingServer_EnsureItResponds() throws IOException {
+        for (int i = 0; i < 20; i ++){
+            RedisServer server = RedisServer.newRedisServer();
+            server.start();
+
+            Jedis jedis = new Jedis(server.getHost(), server.getBindPort());
+            assertEquals("PONG", jedis.ping());
+
+            server.stop();
         }
     }
 }

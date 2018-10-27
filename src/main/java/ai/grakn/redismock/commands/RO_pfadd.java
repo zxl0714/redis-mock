@@ -16,8 +16,7 @@ class RO_pfadd extends AbstractRedisOperation {
         super(base, params,null, 1, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response(){
         Slice key = params().get(0);
         Slice data = base().rawGet(key);
         boolean first;

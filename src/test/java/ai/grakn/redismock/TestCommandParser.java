@@ -1,7 +1,7 @@
 package ai.grakn.redismock;
 
-import ai.grakn.redismock.expecptions.EOFException;
-import ai.grakn.redismock.expecptions.ParseErrorException;
+import ai.grakn.redismock.exception.EOFException;
+import ai.grakn.redismock.exception.ParseErrorException;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;

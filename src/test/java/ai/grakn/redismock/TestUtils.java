@@ -1,6 +1,6 @@
 package ai.grakn.redismock;
 
-import ai.grakn.redismock.expecptions.WrongNumberOfArgumentsException;
+import ai.grakn.redismock.exception.WrongNumberOfArgumentsException;
 import com.google.common.collect.Lists;
 import org.junit.Test;
 

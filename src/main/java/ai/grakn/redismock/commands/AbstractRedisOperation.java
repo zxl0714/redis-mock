@@ -19,6 +19,11 @@ abstract class AbstractRedisOperation implements RedisOperation {
         precheck(expectedParams, minParams, factorParams);
     }
 
+    void doOptionalWork(){
+    }
+
+    abstract Slice response();
+
     RedisBase base(){
         return base;
     }
@@ -27,7 +32,14 @@ abstract class AbstractRedisOperation implements RedisOperation {
         return params;
     }
 
+    @Override
+    public Slice execute(){
+        doOptionalWork();
 
+        synchronized (base){
+            return response();
+        }
+    }
 
     /**
      * Runs a default precheck to make sure the parameters are as expected

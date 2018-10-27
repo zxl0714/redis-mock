@@ -15,8 +15,7 @@ class RO_quit extends AbstractRedisOperation {
         this.client = client;
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         client.sendResponse(Response.clientResponse("quit", Response.OK), "quit");
         client.close();
 

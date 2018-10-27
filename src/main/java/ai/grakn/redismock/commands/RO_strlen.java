@@ -11,8 +11,7 @@ class RO_strlen extends AbstractRedisOperation {
         super(base, params, 1, null, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         Slice value = base().rawGet(params().get(0));
         if (value == null) {
             return Response.integer(0);

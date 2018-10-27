@@ -12,8 +12,7 @@ class RO_mget extends AbstractRedisOperation {
         super(base, params, null, 0, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response(){
         ImmutableList.Builder<Slice> builder = new ImmutableList.Builder<Slice>();
         for (Slice key : params()) {
             builder.add(Response.bulkString(base().rawGet(key)));

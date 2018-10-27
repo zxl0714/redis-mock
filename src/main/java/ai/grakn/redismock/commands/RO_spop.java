@@ -4,34 +4,35 @@ import ai.grakn.redismock.RedisBase;
 import ai.grakn.redismock.Response;
 import ai.grakn.redismock.Slice;
 
-import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import static ai.grakn.redismock.Utils.deserializeObject;
 import static ai.grakn.redismock.Utils.serializeObject;
 
-abstract class RO_pop extends AbstractRedisOperation {
-    RO_pop(RedisBase base, List<Slice> params ) {
+class RO_spop extends AbstractRedisOperation {
+    RO_spop(RedisBase base, List<Slice> params ) {
         super(base, params, 1, null, null);
     }
-
-    abstract Slice popper(LinkedList<Slice> list);
 
     Slice response() {
         Slice key = params().get(0);
         Slice data = base().rawGet(key);
-        LinkedList<Slice> list;
+        Set<Slice> set;
         if (data != null) {
-            list = deserializeObject(data);
+            set = deserializeObject(data);
         } else {
             return Response.NULL;
         }
 
-        if (list.isEmpty()) {
+        if (set.isEmpty()) {
             return Response.NULL;
         }
-        Slice v = popper(list);
-        base().rawPut(key, serializeObject(list), -1L);
+        Iterator<Slice> it = set.iterator();
+        Slice v = it.next();
+        it.remove();
+        base().rawPut(key, serializeObject(set), -1L);
         return Response.bulkString(v);
     }
 }

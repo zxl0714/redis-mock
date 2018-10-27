@@ -17,8 +17,7 @@ class RO_lrange extends AbstractRedisOperation {
         super(base, params, 3, null, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         Slice key = params().get(0);
         Slice data = base().rawGet(key);
         LinkedList<Slice> list;

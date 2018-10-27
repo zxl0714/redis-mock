@@ -11,8 +11,7 @@ class RO_flushall extends AbstractRedisOperation {
         super(base, params, 0, null, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response(){
         base().clear();
         return Response.OK;
     }

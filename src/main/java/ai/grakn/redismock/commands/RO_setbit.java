@@ -15,8 +15,7 @@ class RO_setbit extends AbstractRedisOperation {
         super(base, params, 3, null, null);
     }
 
-    @Override
-    public Slice execute() {
+    Slice response() {
         Slice value = base().rawGet(params().get(0));
 
         byte bit = convertToByte(params().get(2).toString());
