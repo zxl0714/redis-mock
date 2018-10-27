@@ -55,7 +55,7 @@ master.setSlave(slave);
 
 ## Fault tolerance testing
 
-We can make a RedisServer close connection after every serveral commands. This will cause a connection exception for clients.
+We can make a RedisServer close connection after every several commands. This will cause a connection exception for clients.
 
 ```
 RedisServer server = RedisServer.newRedisServer();
