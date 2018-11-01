@@ -12,7 +12,7 @@ Add it as a dependency in Maven as:
 
 ```xml
 <dependency>
-  <groupId>org.fppt</groupId>
+  <groupId>com.github.fppt</groupId>
   <artifactId>jedis-mock</artifactId>
   <version>1.0.0</version>
 </dependency>
