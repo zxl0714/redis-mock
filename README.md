@@ -1,7 +1,7 @@
 [![GitHub release](https://img.shields.io/github/release/fppt/jedis-mock.svg)](https://github.com/fppt/jedis-mock/releases/latest)
 [![Build Status](https://travis-ci.org/fppt/jedis-mock.svg?branch=master)](https://travis-ci.org/fppt/jedis-mock)
 
-# Redis-Mock
+# Jedis-Mock
 
 Redis Mock is a simple in-memory mock of redis for java testing. 
 It allows you to test any behaviour dependent on redis without having to deploy an instance of redis
