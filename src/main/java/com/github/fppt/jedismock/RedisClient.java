@@ -1,7 +1,5 @@
 package com.github.fppt.jedismock;
 
-import ai.grakn.redismock.commands.RedisOperationExecutor;
-import ai.grakn.redismock.exception.EOFException;
 import com.github.fppt.jedismock.commands.RedisOperationExecutor;
 import com.github.fppt.jedismock.exception.EOFException;
 import com.google.common.base.Preconditions;
