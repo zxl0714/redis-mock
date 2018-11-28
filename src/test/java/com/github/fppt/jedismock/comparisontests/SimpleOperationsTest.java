@@ -212,4 +212,35 @@ public class SimpleOperationsTest extends ComparisonBase {
         } while (poppedValue != null);
     }
 
+    @Theory
+    public void whenHSettingOnTheSameKeys_EnsureReturnTypeIs1WhenKeysAreNew(Jedis jedis){
+        String field = "my-field";
+        String hash = "my-hash";
+        assertEquals(new Long(1L), jedis.hset(hash, field, "some value"));
+        assertEquals(new Long(0L), jedis.hset(hash, field, "some other value"));
+    }
+
+    @Theory
+    public void whenHSettingAndHGetting_EnsureValuesAreSetAndRetreived(Jedis jedis){
+        String field = "my-field";
+        String hash = "my-hash";
+        String value = "my-value";
+
+        assertNull(jedis.hget(hash, field));
+        jedis.hset(hash, field, value);
+        assertEquals(value, jedis.hget(hash, field));
+    }
+
+    @Theory
+    public void whenHDeleting_EnsureValuesAreRemoved(Jedis jedis){
+        String field = "my-field-2";
+        String hash = "my-hash-2";
+        String value = "my-value-2";
+
+        assertEquals(new Long(0L), jedis.hdel(hash, field));
+        jedis.hset(hash, field, value);
+        assertEquals(value, jedis.hget(hash, field));
+        assertEquals(new Long(1L), jedis.hdel(hash, field));
+        assertNull(jedis.hget(hash, field));
+    }
 }

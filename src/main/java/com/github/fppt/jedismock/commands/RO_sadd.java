@@ -3,7 +3,6 @@ package com.github.fppt.jedismock.commands;
 import com.github.fppt.jedismock.RedisBase;
 import com.github.fppt.jedismock.Response;
 import com.github.fppt.jedismock.Slice;
-import com.github.fppt.jedismock.exception.InternalException;
 
 import java.util.HashSet;
 import java.util.List;
@@ -19,7 +18,7 @@ class RO_sadd extends AbstractRedisOperation {
 
     Slice response() {
         Slice key = params().get(0);
-        Slice data = base().rawGet(key);
+        Slice data = base().getValue(key);
         Set<Slice> set;
 
         if (data != null) {
@@ -32,9 +31,9 @@ class RO_sadd extends AbstractRedisOperation {
             set.add(params().get(i));
         }
         try {
-            base().rawPut(key, serializeObject(set), -1L);
+            base().putValue(key, serializeObject(set));
         } catch (Exception e) {
-            throw new InternalException(e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
         return Response.integer(set.size());
     }

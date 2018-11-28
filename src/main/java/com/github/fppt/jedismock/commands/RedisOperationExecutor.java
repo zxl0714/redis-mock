@@ -5,7 +5,6 @@ import com.github.fppt.jedismock.RedisClient;
 import com.github.fppt.jedismock.RedisCommand;
 import com.github.fppt.jedismock.Response;
 import com.github.fppt.jedismock.Slice;
-import com.github.fppt.jedismock.exception.WrongNumberOfArgumentsException;
 import com.github.fppt.jedismock.exception.WrongValueTypeException;
 import com.google.common.base.Preconditions;
 import org.slf4j.LoggerFactory;
@@ -131,15 +130,20 @@ public class RedisOperationExecutor {
                 return new RO_smembers(base, params);
             case "spop":
                 return new RO_spop(base, params);
+            case "hget":
+                return new RO_hget(base, params);
+            case "hset":
+                return new RO_hset(base, params);
+            case "hdel":
+                return new RO_hdel(base, params);
             default:
                 throw new UnsupportedOperationException(String.format("Unsupported operation '%s'", name));
         }
     }
 
     public synchronized Slice execCommand(RedisCommand command) {
-        Preconditions.checkArgument(command.getParameters().size() > 0);
-
-        List<Slice> params = command.getParameters();
+        Preconditions.checkArgument(command.parameters().size() > 0);
+        List<Slice> params = command.parameters();
         List<Slice> commandParams = params.subList(1, params.size());
         String name = new String(params.get(0).data()).toLowerCase();
 
@@ -159,12 +163,9 @@ public class RedisOperationExecutor {
             }
 
             return Response.clientResponse(name, Response.OK);
-        } catch(UnsupportedOperationException | WrongValueTypeException e){
+        } catch(UnsupportedOperationException | WrongValueTypeException | IllegalArgumentException e){
             LOG.error("Malformed request", e);
             return Response.error(e.getMessage());
-        } catch (WrongNumberOfArgumentsException e){
-            LOG.error("Malformed request", e);
-            return Response.error(String.format("ERR wrong number of arguments for '%s' command", name));
         }
     }
 

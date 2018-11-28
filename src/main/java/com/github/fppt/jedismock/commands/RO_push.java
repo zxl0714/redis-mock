@@ -3,7 +3,6 @@ package com.github.fppt.jedismock.commands;
 import com.github.fppt.jedismock.RedisBase;
 import com.github.fppt.jedismock.Response;
 import com.github.fppt.jedismock.Slice;
-import com.github.fppt.jedismock.exception.InternalException;
 import com.google.common.collect.Lists;
 
 import java.util.LinkedList;
@@ -21,7 +20,7 @@ abstract class RO_push extends AbstractRedisOperation {
 
     Slice response() {
         Slice key = params().get(0);
-        Slice data = base().rawGet(key);
+        Slice data = base().getValue(key);
         LinkedList<Slice> list;
 
         if (data != null) {
@@ -34,9 +33,9 @@ abstract class RO_push extends AbstractRedisOperation {
             pusher(list, params().get(i));
         }
         try {
-            base().rawPut(key, serializeObject(list), -1L);
+            base().putValue(key, serializeObject(list));
         } catch (Exception e) {
-            throw new InternalException(e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
         return Response.integer(list.size());
     }

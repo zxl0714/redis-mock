@@ -1,7 +1,7 @@
 package com.github.fppt.jedismock;
 
 import com.github.fppt.jedismock.commands.RedisOperationExecutor;
-import com.github.fppt.jedismock.exception.EOFException;
+import com.github.fppt.jedismock.exception.ParseErrorException;
 import com.google.common.base.Preconditions;
 import org.slf4j.LoggerFactory;
 
@@ -49,8 +49,7 @@ public class RedisClient implements Runnable {
                 sendResponse(response, command.toString());
 
                 count++;
-                if (options.getCloseSocketAfterSeveralCommands() != 0
-                        && options.getCloseSocketAfterSeveralCommands() == count) {
+                if (options.autoCloseOn() != 0 && options.autoCloseOn() == count) {
                     break;
                 }
             }
@@ -67,10 +66,9 @@ public class RedisClient implements Runnable {
     private Optional<RedisCommand> nextCommand(){
         try {
             return Optional.of(RedisCommandParser.parse(in));
-        } catch (EOFException e) {
-            //IGNORED often there will be nothing on the stream
+        } catch (ParseErrorException e){
+            return Optional.empty(); // This simply means there is no next command
         }
-        return Optional.empty();
     }
 
     /**
