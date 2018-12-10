@@ -14,7 +14,7 @@ Add it as a dependency in Maven as:
 <dependency>
   <groupId>com.github.fppt</groupId>
   <artifactId>jedis-mock</artifactId>
-  <version>0.1.7</version>
+  <version>0.1.8</version>
 </dependency>
 ```
 
@@ -64,4 +64,14 @@ options.setCloseSocketAfterSeveralCommands(3);
 server.setOptions(options);
 server.start();
 ```
+
+## Missing Operations
+
+If you get the following error:
+
+```
+Unsupported operation {}
+```
+
+Please feel free to create an issue requesting the missing operation.
 
