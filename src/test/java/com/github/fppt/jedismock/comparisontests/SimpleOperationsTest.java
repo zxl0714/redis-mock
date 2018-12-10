@@ -8,10 +8,7 @@ import redis.clients.jedis.Client;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,6 +21,16 @@ import static org.junit.Assert.assertNull;
 
 @RunWith(Theories.class)
 public class SimpleOperationsTest extends ComparisonBase {
+
+    private String HASH = "hash";
+    private String FIELD_1 = "field1";
+    private String VALUE_1 = "value1";
+    private String FIELD_2 = "field2";
+    private String VALUE_2 = "value2";
+    private String FIELD_3 = "field3";
+    private String VALUE_3 = "value3";
+    private String FIELD_4 = "field4";
+    private String FIELD_5 = "field5";
 
     @Theory
     public void whenSettingKeyAndRetrievingIt_CorrectResultIsReturned(Jedis jedis) {
@@ -214,10 +221,8 @@ public class SimpleOperationsTest extends ComparisonBase {
 
     @Theory
     public void whenHSettingOnTheSameKeys_EnsureReturnTypeIs1WhenKeysAreNew(Jedis jedis){
-        String field = "my-field";
-        String hash = "my-hash";
-        assertEquals(new Long(1L), jedis.hset(hash, field, "some value"));
-        assertEquals(new Long(0L), jedis.hset(hash, field, "some other value"));
+        assertEquals(new Long(1L), jedis.hset(HASH, FIELD_1, VALUE_1));
+        assertEquals(new Long(0L), jedis.hset(HASH, FIELD_1, VALUE_1));
     }
 
     @Theory
@@ -242,5 +247,86 @@ public class SimpleOperationsTest extends ComparisonBase {
         assertEquals(value, jedis.hget(hash, field));
         assertEquals(new Long(1L), jedis.hdel(hash, field));
         assertNull(jedis.hget(hash, field));
+    }
+
+    @Theory
+    public void whenHGetAll_EnsureAllKeysAndValuesReturned(Jedis jedis){
+        jedis.hset(HASH, FIELD_1, VALUE_1);
+        jedis.hset(HASH, FIELD_2, VALUE_2);
+
+        //Check first returns
+        Map<String, String> result = jedis.hgetAll(HASH);
+        assertEquals(2, result.size());
+        assertEquals(VALUE_1, result.get(FIELD_1));
+        assertEquals(VALUE_2, result.get(FIELD_2));
+
+        jedis.hset(HASH, FIELD_3, VALUE_3);
+
+        //Check first returns
+        result = jedis.hgetAll(HASH);
+        assertEquals(3, result.size());
+        assertEquals(VALUE_1, result.get(FIELD_1));
+        assertEquals(VALUE_2, result.get(FIELD_2));
+        assertEquals(VALUE_3, result.get(FIELD_3));
+
+        //Check empty case
+        result = jedis.hgetAll("rubbish");
+        assertEquals(0, result.size());
+    }
+
+    @Theory
+    public void whenUsingHsinter_EnsureSetIntersectionIsReturned(Jedis jedis){
+        String key1 = "my-set-key-1";
+        Set<String> mySet1 = new HashSet<>(Arrays.asList("a", "b", "c", "d"));
+        String key2 = "my-set-key-2";
+        Set<String> mySet2 = new HashSet<>(Arrays.asList("b", "d", "e", "f"));
+        String key3 = "my-set-key-3";
+        Set<String> mySet3 = new HashSet<>(Arrays.asList("b", "e", "f"));
+
+        Set<String> expectedIntersection1 = new HashSet<>(Arrays.asList("b", "d"));
+        Set<String> expectedIntersection2 = new HashSet<>(Collections.singletonList("b"));
+
+        //Add everything from the sets
+        mySet1.forEach(value -> jedis.sadd(key1, value));
+        mySet2.forEach(value -> jedis.sadd(key2, value));
+        mySet3.forEach(value -> jedis.sadd(key3, value));
+
+        Set<String> intersection = jedis.sinter(key1, key2);
+        assertEquals(expectedIntersection1, intersection);
+
+        intersection = jedis.sinter(key1, key2, key3);
+        assertEquals(expectedIntersection2, intersection);
+    }
+
+    @Theory
+    public void whenUsingHMget_EnsureAllValuesReturnedForEachField(Jedis jedis){
+        jedis.hset(HASH, FIELD_1, VALUE_1);
+        jedis.hset(HASH, FIELD_2, VALUE_2);
+        jedis.hset(HASH, FIELD_3, VALUE_3);
+
+        List<String> result = jedis.hmget(HASH, FIELD_1, FIELD_2, FIELD_5, FIELD_3, FIELD_4);
+
+        assertEquals(5, result.size());
+        assertEquals(VALUE_1, result.get(0));
+        assertEquals(VALUE_2, result.get(1));
+        assertNull(result.get(2));
+        assertEquals(VALUE_3, result.get(3));
+        assertNull(result.get(4));
+    }
+
+    @Theory
+    public void whenUsingHMset_EnsureAllValuesAreSetForEachField(Jedis jedis){
+        Map<String, String> map = new HashMap<>();
+        map.put(FIELD_1, VALUE_1);
+        map.put(FIELD_2, VALUE_2);
+
+        jedis.hmset(HASH, map);
+        assertEquals(VALUE_1, jedis.hget(HASH, FIELD_1));
+        assertEquals(VALUE_2, jedis.hget(HASH, FIELD_2));
+
+        map.put(FIELD_2, VALUE_1);
+        jedis.hmset(HASH, map);
+        assertEquals(VALUE_1, jedis.hget(HASH, FIELD_1));
+        assertEquals(VALUE_1, jedis.hget(HASH, FIELD_2));
     }
 }
