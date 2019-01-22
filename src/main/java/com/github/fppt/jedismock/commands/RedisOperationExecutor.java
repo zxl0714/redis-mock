@@ -30,119 +30,121 @@ public class RedisOperationExecutor {
     }
 
     private RedisOperation buildSimpleOperation(String name, List<Slice> params){
-        switch(name){
-            case "set":
+        RedisOperations foundOperation = RedisOperations.valueOf(name);
+
+        switch(foundOperation){
+            case SET:
                 return new RO_set(base, params);
-            case "setex":
+            case SETEX:
                 return new RO_setex(base, params);
-            case "psetex":
+            case PSETEX:
                 return new RO_psetex(base, params);
-            case "setnx":
+            case SETNX:
                 return new RO_setnx(base, params);
-            case "setbit":
+            case SETBIT:
                 return new RO_setbit(base, params);
-            case "append":
+            case APPEND:
                 return new RO_append(base, params);
-            case "get":
+            case GET:
                 return new RO_get(base, params);
-            case "getbit":
+            case GETBIT:
                 return new RO_getbit(base, params);
-            case "ttl":
+            case TTL:
                 return new RO_ttl(base, params);
-            case "pttl":
+            case PTTL:
                 return new RO_pttl(base, params);
-            case "expire":
+            case EXPIRE:
                 return new RO_expire(base, params);
-            case "pexpire":
+            case PEXPIRE:
                 return new RO_pexpire(base, params);
-            case "incr":
+            case INCR:
                 return new RO_incr(base, params);
-            case "incrby":
+            case INCRBY:
                 return new RO_incrby(base, params);
-            case "decr":
+            case DECR:
                 return new RO_decr(base, params);
-            case "decrby":
+            case DECRBY:
                 return new RO_decrby(base, params);
-            case "pfcount":
+            case PFCOUNT:
                 return new RO_pfcount(base, params);
-            case "pfadd":
+            case PFADD:
                 return new RO_pfadd(base, params);
-            case "pfmerge":
+            case PFMERGE:
                 return new RO_pfmerge(base, params);
-            case "mget":
+            case MGET:
                 return new RO_mget(base, params);
-            case "mset":
+            case MSET:
                 return new RO_mset(base, params);
-            case "getset":
+            case GETSET:
                 return new RO_getset(base, params);
-            case "strlen":
+            case STRLEN:
                 return new RO_strlen(base, params);
-            case "del":
+            case DEL:
                 return new RO_del(base, params);
-            case "exists":
+            case EXISTS:
                 return new RO_exists(base, params);
-            case "expireat":
+            case EXPIREAT:
                 return new RO_expireat(base, params);
-            case "pexpireat":
+            case PEXPIREAT:
                 return new RO_pexpireat(base, params);
-            case "lpush":
+            case LPUSH:
                 return new RO_lpush(base, params);
-            case "rpush":
+            case RPUSH:
                 return new RO_rpush(base, params);
-            case "lpushx":
+            case LPUSHX:
                 return new RO_lpushx(base, params);
-            case "lrange":
+            case LRANGE:
                 return new RO_lrange(base, params);
-            case "llen":
+            case LLEN:
                 return new RO_llen(base, params);
-            case "lpop":
+            case LPOP:
                 return new RO_lpop(base, params);
-            case "rpop":
+            case RPOP:
                 return new RO_rpop(base, params);
-            case "lindex":
+            case LINDEX:
                 return new RO_lindex(base, params);
-            case "rpoplpush":
+            case RPOPLPUSH:
                 return new RO_rpoplpush(base, params);
-            case "brpoplpush":
+            case BRPOPLPUSH:
                 return new RO_brpoplpush(base, params);
-            case "subscribe":
+            case SUBSCRIBE:
                 return new RO_subscribe(base, owner, params);
-            case "unsubscribe":
+            case UNSUBSCRIBE:
                 return new RO_unsubscribe(base, owner, params);
-            case "publish":
+            case PUBLISH:
                 return new RO_publish(base, params);
-            case "flushall":
+            case FLUSHALL:
                 return new RO_flushall(base, params);
-            case "lrem":
+            case LREM:
                 return new RO_lrem(base, params);
-            case "quit":
+            case QUIT:
                 return new RO_quit(base, owner, params);
-            case "exec":
+            case EXEC:
                 transactionModeOn = false;
                 return new RO_exec(base, transaction, params);
-            case "ping":
+            case PING:
                 return new RO_ping(base, params);
-            case "keys":
+            case KEYS:
                 return new RO_keys(base, params);
-            case "sadd":
+            case SADD:
                 return new RO_sadd(base, params);
-            case "smembers":
+            case SMEMBERS:
                 return new RO_smembers(base, params);
-            case "spop":
+            case SPOP:
                 return new RO_spop(base, params);
-            case "hget":
+            case HGET:
                 return new RO_hget(base, params);
-            case "hset":
+            case HSET:
                 return new RO_hset(base, params);
-            case "hdel":
+            case HDEL:
                 return new RO_hdel(base, params);
-            case "hgetall":
+            case HGETALL:
                 return new RO_hegetall(base, params);
-            case "sinter":
+            case SINTER:
                 return new RO_sinter(base, params);
-            case "hmget":
+            case HMGET:
                 return new RO_hmget(base, params);
-            case "hmset":
+            case HMSET:
                 return new RO_hmset(base, params);
             default:
                 throw new UnsupportedOperationException(String.format("Unsupported operation '%s'", name));
@@ -153,11 +155,11 @@ public class RedisOperationExecutor {
         Preconditions.checkArgument(command.parameters().size() > 0);
         List<Slice> params = command.parameters();
         List<Slice> commandParams = params.subList(1, params.size());
-        String name = new String(params.get(0).data()).toLowerCase();
+        String name = new String(params.get(0).data()).toUpperCase();
 
         try {
-            //Transaction handling
-            if(name.equals("multi")){
+            //Meta Command handling
+            if(name.equals(RedisOperations.MULTI.name())){
                 newTransaction();
                 return Response.clientResponse(name, Response.OK);
             }
