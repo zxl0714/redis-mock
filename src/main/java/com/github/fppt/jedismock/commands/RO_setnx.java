@@ -8,7 +8,7 @@ import java.util.List;
 
 class RO_setnx extends AbstractRedisOperation {
     RO_setnx(RedisBase base, List<Slice> params) {
-        super(base, params, 2, null, null);
+        super(base, params);
     }
 
     Slice response(){

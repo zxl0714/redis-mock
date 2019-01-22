@@ -13,7 +13,7 @@ import static com.github.fppt.jedismock.Utils.serializeObject;
 
 class RO_pfmerge extends AbstractRedisOperation {
     RO_pfmerge(RedisBase base, List<Slice> params) {
-        super(base, params,null, 0, null);
+        super(base, params);
     }
 
     Slice response() {

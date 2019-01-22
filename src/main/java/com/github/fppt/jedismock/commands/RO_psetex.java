@@ -9,7 +9,7 @@ import static com.github.fppt.jedismock.Utils.convertToLong;
 
 class RO_psetex extends RO_setex {
     RO_psetex(RedisBase base, List<Slice> params) {
-        super(base, params, 3);
+        super(base, params);
     }
 
     @Override

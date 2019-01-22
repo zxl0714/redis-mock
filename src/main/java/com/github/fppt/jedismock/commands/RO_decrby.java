@@ -9,11 +9,7 @@ import static com.github.fppt.jedismock.Utils.convertToLong;
 
 class RO_decrby extends RO_incrOrDecrBy {
     RO_decrby(RedisBase base, List<Slice> params) {
-        super(base, params, 2);
-    }
-
-    RO_decrby(RedisBase base, List<Slice> params, Integer expectedParams) {
-        super(base, params, expectedParams);
+        super(base, params);
     }
 
     long incrementOrDecrementValue(List<Slice> params){

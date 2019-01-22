@@ -12,9 +12,9 @@ import java.util.Set;
 
 import static com.github.fppt.jedismock.Utils.deserializeObject;
 
-public class RO_sinter extends AbstractRedisOperation {
-    public RO_sinter(RedisBase base, List<Slice> params) {
-        super(base, params,  null, null, null);
+class RO_sinter extends AbstractRedisOperation {
+    RO_sinter(RedisBase base, List<Slice> params) {
+        super(base, params);
     }
 
     @Override

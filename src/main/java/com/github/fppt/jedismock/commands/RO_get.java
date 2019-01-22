@@ -8,7 +8,7 @@ import java.util.List;
 
 class RO_get extends AbstractRedisOperation {
     RO_get(RedisBase base, List<Slice> params) {
-        super(base, params, 1, null, null);
+        super(base, params);
     }
 
     Slice response() {

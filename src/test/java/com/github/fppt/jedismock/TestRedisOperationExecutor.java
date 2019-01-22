@@ -6,6 +6,9 @@ import com.github.fppt.jedismock.exception.ParseErrorException;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -57,7 +60,9 @@ public class TestRedisOperationExecutor {
     @Before
     public void initCommandExecutor() {
         //TODO: Mock out the client here
-        executor = new RedisOperationExecutor(new RedisBase(), null);
+        Map<Integer, RedisBase> redisBases = new HashMap<>();
+        redisBases.put(0, new RedisBase());
+        executor = new RedisOperationExecutor(redisBases, null);
     }
 
     @Test
@@ -68,12 +73,6 @@ public class TestRedisOperationExecutor {
         assertCommandOK(array("SET", "ab", "abd"));
         assertCommandEquals("abd", array("GET", "ab"));
         assertCommandNull(array("GET", "ac"));
-    }
-
-    @Test
-    public void testWrongNumberOfArguments() throws ParseErrorException, EOFException {
-        assertCommandError(array("SET", "ab"));
-        assertCommandError(array("pfcount"));
     }
 
     @Test

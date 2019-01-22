@@ -7,7 +7,7 @@ import java.util.List;
 
 class RO_incr extends RO_incrby {
     RO_incr(RedisBase base, List<Slice> params) {
-        super(base, params, 1);
+        super(base, params);
     }
 
     @Override

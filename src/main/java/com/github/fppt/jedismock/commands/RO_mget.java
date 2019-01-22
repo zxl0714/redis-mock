@@ -9,7 +9,7 @@ import java.util.List;
 
 class RO_mget extends AbstractRedisOperation {
     RO_mget(RedisBase base, List<Slice> params) {
-        super(base, params, null, 0, null);
+        super(base, params);
     }
 
     Slice response(){

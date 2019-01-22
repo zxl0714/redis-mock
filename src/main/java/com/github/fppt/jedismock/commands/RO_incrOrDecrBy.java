@@ -9,8 +9,8 @@ import java.util.List;
 import static com.github.fppt.jedismock.Utils.convertToLong;
 
 abstract class RO_incrOrDecrBy extends AbstractRedisOperation {
-    RO_incrOrDecrBy(RedisBase base, List<Slice> params, Integer expectedParams) {
-        super(base, params, expectedParams, null, null);
+    RO_incrOrDecrBy(RedisBase base, List<Slice> params) {
+        super(base, params);
     }
 
     abstract long incrementOrDecrementValue(List<Slice> params);

@@ -13,7 +13,7 @@ class RO_exec extends AbstractRedisOperation {
     private final List<RedisOperation> transaction;
 
     RO_exec(RedisBase base, List<RedisOperation> transaction, List<Slice> params) {
-        super(base, params,0, null, null);
+        super(base, params);
         this.transaction = transaction;
     }
 

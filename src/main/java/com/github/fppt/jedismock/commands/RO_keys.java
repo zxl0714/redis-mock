@@ -9,7 +9,7 @@ import java.util.List;
 
 class RO_keys extends AbstractRedisOperation {
     RO_keys(RedisBase base, List<Slice> params) {
-        super(base, params, 1, null, null);
+        super(base, params);
     }
 
     Slice response() {

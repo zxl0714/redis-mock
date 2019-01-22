@@ -4,6 +4,8 @@ import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Xiaolu on 2015/4/18.
@@ -14,7 +16,7 @@ public class RedisServer {
     private ServiceOptions options = ServiceOptions.defaultOptions();
     private ServerSocket server = null;
     private Thread service = null;
-    private final RedisBase base = new RedisBase();
+    private final Map<Integer, RedisBase> redisBases = new HashMap<>();
 
     public RedisServer() throws IOException {
         this(0);
@@ -34,7 +36,6 @@ public class RedisServer {
 
     public void setOptions(ServiceOptions options) {
         Preconditions.checkNotNull(options);
-
         this.options = options;
     }
 
@@ -43,7 +44,7 @@ public class RedisServer {
         Preconditions.checkState(service == null);
 
         server = new ServerSocket(bindPort);
-        service = new Thread(new RedisService(server, base, options));
+        service = new Thread(new RedisService(server, redisBases, options));
         service.start();
     }
 
@@ -80,18 +81,6 @@ public class RedisServer {
 
     public int getBindPort() {
         Preconditions.checkNotNull(server);
-
         return server.getLocalPort();
-    }
-
-    public RedisBase getBase() {
-        return base;
-    }
-
-    public void setSlave(RedisServer slave) {
-        Preconditions.checkState(server == null);
-        Preconditions.checkState(service == null);
-
-        base.addSyncBase(slave.getBase());
     }
 }

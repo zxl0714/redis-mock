@@ -8,7 +8,7 @@ import java.util.List;
 
 class RO_strlen extends AbstractRedisOperation {
     RO_strlen(RedisBase base, List<Slice> params) {
-        super(base, params, 1, null, null);
+        super(base, params);
     }
 
     Slice response() {

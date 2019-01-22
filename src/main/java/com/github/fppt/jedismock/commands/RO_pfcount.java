@@ -12,7 +12,7 @@ import static com.github.fppt.jedismock.Utils.deserializeObject;
 
 class RO_pfcount extends AbstractRedisOperation {
     RO_pfcount(RedisBase base, List<Slice> params) {
-        super(base, params, null, 0, null);
+        super(base, params);
     }
 
     Slice response() {

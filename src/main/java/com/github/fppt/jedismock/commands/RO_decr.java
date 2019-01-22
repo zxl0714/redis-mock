@@ -7,7 +7,7 @@ import java.util.List;
 
 class RO_decr extends RO_decrby {
     RO_decr(RedisBase base, List<Slice> params) {
-        super(base, params, 1);
+        super(base, params);
     }
 
     @Override

@@ -11,7 +11,7 @@ class RO_quit extends AbstractRedisOperation {
     private final RedisClient client;
 
     RO_quit(RedisBase base, RedisClient client, List<Slice> params) {
-        super(base, params,0, null, null);
+        super(base, params);
         this.client = client;
     }
 

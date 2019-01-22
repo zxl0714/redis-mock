@@ -10,11 +10,7 @@ import static com.github.fppt.jedismock.Utils.convertToLong;
 
 class RO_setex extends RO_set {
     RO_setex(RedisBase base, List<Slice> params) {
-        super(base, params, 3);
-    }
-
-    RO_setex(RedisBase base, List<Slice> params, Integer expectedParams) {
-        super(base, params, expectedParams);
+        super(base, params);
     }
 
     long valueToSet(List<Slice> params){

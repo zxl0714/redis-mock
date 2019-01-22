@@ -8,7 +8,7 @@ import java.util.List;
 
 class RO_ping extends AbstractRedisOperation {
     RO_ping(RedisBase base, List<Slice> params) {
-        super(base, params,  0, null, null);
+        super(base, params);
     }
 
     Slice response() {

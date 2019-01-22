@@ -8,7 +8,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.List;
 
 /**
  * Created by Xiaolu on 2015/4/21.
@@ -20,24 +19,6 @@ public class Utils {
             closeable.close();
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    public static void checkArgumentsNumberEquals(List<Slice> args, int expect) {
-        if (args.size() != expect) {
-            throw new IllegalArgumentException("The number of arguments [" + args.size() + "] does not match the expected value [" + expect + "]");
-        }
-    }
-
-    public static void checkArgumentsNumberGreater(List<Slice> args, int expect) {
-        if (args.size() <= expect) {
-            throw new IllegalArgumentException("The number of arguments [" + args.size() + "] is less than the expected value [" + expect + "]");
-        }
-    }
-
-    public static void checkArgumentsNumberFactor(List<Slice> args, int factor) {
-        if (args.size() % factor != 0) {
-            throw new IllegalArgumentException("The number of arguments [" + args.size() + "] is not a factor of the expected value [" + factor + "]");
         }
     }
 

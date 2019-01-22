@@ -10,11 +10,7 @@ import java.util.List;
 
 class RO_rpoplpush extends AbstractRedisOperation {
     RO_rpoplpush(RedisBase base, List<Slice> params) {
-        super(base, params, 2, null, null);
-    }
-
-    RO_rpoplpush(RedisBase base, List<Slice> params, Integer numExpected) {
-        super(base, params, numExpected, null, null);
+        super(base, params);
     }
 
     Slice response() {

@@ -8,11 +8,7 @@ import java.util.List;
 
 class RO_hset extends AbstractRedisOperation {
     RO_hset(RedisBase base, List<Slice> params) {
-        super(base, params, 3, null, null);
-    }
-
-    public RO_hset(RedisBase base, List<Slice> params, Integer expectedParams) {
-        super(base, params, expectedParams, null,null);
+        super(base, params);
     }
 
     Slice response() {

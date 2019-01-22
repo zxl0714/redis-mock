@@ -11,7 +11,7 @@ class RO_subscribe extends AbstractRedisOperation {
     private final RedisClient client;
 
     RO_subscribe(RedisBase base, RedisClient client, List<Slice> params) {
-        super(base, params,null, 0, null);
+        super(base, params);
         this.client = client;
     }
 

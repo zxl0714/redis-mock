@@ -14,8 +14,7 @@ class RO_brpoplpush extends RO_rpoplpush {
     private long count = 0L;
 
     RO_brpoplpush(RedisBase base, List<Slice> params) {
-        //NOTE: The minimum number of arguments is 1 because this mock is used for brpoplpush as well which takes in 3 arguments
-        super(base, params, 3);
+        super(base, params);
     }
 
     void doOptionalWork(){

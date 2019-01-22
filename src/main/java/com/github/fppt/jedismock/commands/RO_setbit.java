@@ -12,7 +12,7 @@ import static com.github.fppt.jedismock.Utils.convertToNonNegativeInteger;
 
 class RO_setbit extends AbstractRedisOperation {
     RO_setbit(RedisBase base, List<Slice> params) {
-        super(base, params, 3, null, null);
+        super(base, params);
     }
 
     Slice response() {

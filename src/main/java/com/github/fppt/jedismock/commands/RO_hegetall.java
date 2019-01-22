@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class RO_hegetall extends AbstractRedisOperation {
     public RO_hegetall(RedisBase base, List<Slice> params) {
-        super(base, params, 1, null, null);
+        super(base, params);
     }
 
     @Override

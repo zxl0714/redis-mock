@@ -11,7 +11,7 @@ import java.util.Set;
 class RO_publish extends AbstractRedisOperation {
 
     RO_publish(RedisBase base, List<Slice> params) {
-        super(base, params,2, null, null);
+        super(base, params);
     }
 
     Slice response(){

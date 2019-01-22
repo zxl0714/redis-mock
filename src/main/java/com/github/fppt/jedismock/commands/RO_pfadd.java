@@ -13,7 +13,7 @@ import static com.github.fppt.jedismock.Utils.serializeObject;
 
 class RO_pfadd extends AbstractRedisOperation {
     RO_pfadd(RedisBase base, List<Slice> params) {
-        super(base, params,null, 1, null);
+        super(base, params);
     }
 
     Slice response(){

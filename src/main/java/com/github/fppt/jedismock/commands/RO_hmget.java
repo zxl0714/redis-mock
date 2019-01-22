@@ -9,7 +9,7 @@ import java.util.List;
 
 public class RO_hmget extends AbstractRedisOperation {
     public RO_hmget(RedisBase base, List<Slice> params) {
-        super(base, params, null, 2, null);
+        super(base, params);
     }
 
     @Override

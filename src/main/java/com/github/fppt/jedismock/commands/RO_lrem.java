@@ -14,7 +14,7 @@ import static com.github.fppt.jedismock.Utils.serializeObject;
 
 class RO_lrem extends AbstractRedisOperation {
     RO_lrem(RedisBase base, List<Slice> params) {
-        super(base, params,3, null, null);
+        super(base, params);
     }
 
     Slice response(){

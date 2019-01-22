@@ -6,7 +6,7 @@ import com.github.fppt.jedismock.Slice;
 import java.util.LinkedList;
 import java.util.List;
 
-class RO_lpop extends RO_pop {
+class RO_lpop extends RO_pop<LinkedList<Slice>> {
     RO_lpop(RedisBase base,List<Slice> params ) {
         super(base, params);
     }

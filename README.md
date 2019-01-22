@@ -45,14 +45,6 @@ public void after() {
 
 From here test as needed
 
-## Master and Slave
-
-```
-RedisServer master = newRedisServer();
-RedisServer slave = newRedisServer();
-master.setSlave(slave);
-```
-
 ## Fault tolerance testing
 
 We can make a RedisServer close connection after every several commands. This will cause a connection exception for clients.

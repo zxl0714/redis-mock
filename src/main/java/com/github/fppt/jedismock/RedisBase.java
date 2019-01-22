@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 /**
  * Created by Xiaolu on 2015/4/20.
@@ -17,14 +16,8 @@ import java.util.function.Consumer;
 public class RedisBase {
     private final ExpiringKeyValueStorage keyValueStorage = ExpiringKeyValueStorage.create();
     private final Map<Slice, Set<RedisClient>> subscribers = new ConcurrentHashMap<>();
-    private final Set<RedisBase> syncBases = ConcurrentHashMap.newKeySet();
 
     public RedisBase() {}
-
-    public void addSyncBase(RedisBase base) {
-        syncBases.add(base);
-    }
-
 
     public Set<Slice> keys(){
         return keyValueStorage.values().rowMap().keySet();
@@ -46,28 +39,19 @@ public class RedisBase {
         return keyValueStorage.getTTL(key);
     }
 
-    private void syncBases(Consumer<RedisBase> syncFunction){
-        for (RedisBase base : syncBases) {
-            syncFunction.accept(base);
-        }
-    }
-
     public long setTTL(Slice key, long ttl) {
         long result = keyValueStorage.setTTL(key, ttl);
-        syncBases((base) -> base.setTTL(key, ttl));
         return result;
     }
 
     public long setDeadline(Slice key, long deadline) {
         long result = keyValueStorage.setDeadline(key, deadline);
-        syncBases((base) -> base.setDeadline(key, deadline));
         return result;
     }
 
     public void clear(){
         keyValueStorage.clear();
         subscribers.clear();
-        syncBases.clear();
     }
 
     public void putValue(Slice key, Slice value){
@@ -76,22 +60,18 @@ public class RedisBase {
 
     public void putValue(Slice key, Slice value, Long ttl) {
         keyValueStorage.put(key, value, ttl);
-        syncBases((base) -> base.putValue(key, value, ttl));
     }
 
     public void putValue(Slice key1, Slice key2, Slice value, Long ttl) {
         keyValueStorage.put(key1, key2, value, ttl);
-        syncBases((base) -> base.putValue(key1, key2, value, ttl));
     }
 
     public void deleteValue(Slice key) {
         keyValueStorage.delete(key);
-        syncBases((base) -> base.deleteValue(key));
     }
 
     public void deleteValue(Slice key1, Slice key2) {
         keyValueStorage.delete(key1, key2);
-        syncBases((base) -> base.deleteValue(key1, key2));
     }
 
     public void addSubscriber(Slice channel, RedisClient client){
