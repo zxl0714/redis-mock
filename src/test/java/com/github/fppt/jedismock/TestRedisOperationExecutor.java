@@ -1,8 +1,13 @@
 package com.github.fppt.jedismock;
 
-import com.github.fppt.jedismock.commands.RedisOperationExecutor;
+import com.github.fppt.jedismock.commands.RedisCommandParser;
+import com.github.fppt.jedismock.server.RedisOperationExecutor;
 import com.github.fppt.jedismock.exception.EOFException;
 import com.github.fppt.jedismock.exception.ParseErrorException;
+import com.github.fppt.jedismock.server.Response;
+import com.github.fppt.jedismock.server.Slice;
+import com.github.fppt.jedismock.storage.OperationExecutorState;
+import com.github.fppt.jedismock.storage.RedisBase;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -62,7 +67,8 @@ public class TestRedisOperationExecutor {
         //TODO: Mock out the client here
         Map<Integer, RedisBase> redisBases = new HashMap<>();
         redisBases.put(0, new RedisBase());
-        executor = new RedisOperationExecutor(redisBases, null);
+        OperationExecutorState state = new OperationExecutorState(null, redisBases);
+        executor = new RedisOperationExecutor(state);
     }
 
     @Test

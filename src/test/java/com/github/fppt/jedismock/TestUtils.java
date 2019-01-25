@@ -1,5 +1,6 @@
 package com.github.fppt.jedismock;
 
+import com.github.fppt.jedismock.server.Slice;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

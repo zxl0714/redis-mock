@@ -1,7 +1,10 @@
 package com.github.fppt.jedismock;
 
+import com.github.fppt.jedismock.commands.RedisCommand;
+import com.github.fppt.jedismock.commands.RedisCommandParser;
 import com.github.fppt.jedismock.exception.EOFException;
 import com.github.fppt.jedismock.exception.ParseErrorException;
+import com.github.fppt.jedismock.server.SliceParser;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
