@@ -77,6 +77,8 @@ public class OperationFactory {
 
     public static Optional<RedisOperation> buildMetaOperation(String name, OperationExecutorState state, List<Slice> params){
         switch(name){
+            case "info":
+                return Optional.of(new RO_info());
             case "multi":
                 return Optional.of(new RO_multi(state));
             case "select":
