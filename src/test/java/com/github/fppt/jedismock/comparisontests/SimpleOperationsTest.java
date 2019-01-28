@@ -329,4 +329,13 @@ public class SimpleOperationsTest extends ComparisonBase {
         assertEquals(VALUE_1, jedis.hget(HASH, FIELD_1));
         assertEquals(VALUE_1, jedis.hget(HASH, FIELD_2));
     }
+
+    @Theory
+    public void whenUsingHsetnx_EnsureValueIsOnlyPutIfOtherValueDoesNotExist(Jedis jedis){
+        assertNull(jedis.hget(HASH, FIELD_3));
+        jedis.hsetnx(HASH, FIELD_3, VALUE_1);
+        assertEquals(VALUE_1, jedis.hget(HASH, FIELD_3));
+        jedis.hsetnx(HASH, FIELD_3, VALUE_2);
+        assertEquals(VALUE_1, jedis.hget(HASH, FIELD_3));
+    }
 }
