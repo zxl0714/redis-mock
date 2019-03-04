@@ -57,6 +57,8 @@ public class OperationFactory {
         TRANSACTIONAL_OPERATIONS.put("keys", RO_keys::new);
         TRANSACTIONAL_OPERATIONS.put("sadd", RO_sadd::new);
         TRANSACTIONAL_OPERATIONS.put("spop", RO_spop::new);
+        TRANSACTIONAL_OPERATIONS.put("srem", RO_srem::new);
+        TRANSACTIONAL_OPERATIONS.put("scard", RO_scard::new);
         TRANSACTIONAL_OPERATIONS.put("hget", RO_hget::new);
         TRANSACTIONAL_OPERATIONS.put("hset", RO_hset::new);
         TRANSACTIONAL_OPERATIONS.put("hdel", RO_hdel::new);
@@ -66,6 +68,7 @@ public class OperationFactory {
         TRANSACTIONAL_OPERATIONS.put("hmset", RO_hmset::new);
         TRANSACTIONAL_OPERATIONS.put("smembers", RO_smembers::new);
         TRANSACTIONAL_OPERATIONS.put("hsetnx", RO_hsetnx::new);
+        TRANSACTIONAL_OPERATIONS.put("time", RO_time::new);
     }
 
 

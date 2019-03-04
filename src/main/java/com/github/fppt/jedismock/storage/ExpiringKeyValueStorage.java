@@ -21,8 +21,9 @@ public abstract class ExpiringKeyValueStorage {
         return new AutoValue_ExpiringKeyValueStorage(HashBasedTable.create(), HashBasedTable.create());
     }
 
-    public void delete(Slice key){
-        delete(key, Slice.reserved());
+    public void delete(Slice key) {
+        for (Slice key2 : values().row(key).keySet())
+            delete(key, key2);
     }
 
     public void delete(Slice key1, Slice key2){
@@ -120,5 +121,18 @@ public abstract class ExpiringKeyValueStorage {
             return 1L;
         }
         return 0L;
+    }
+
+    public boolean exists(Slice slice) {
+        if (values().containsRow(slice)) {
+            Long deadline = ttls().get(slice, Slice.reserved());
+            if (deadline != null && deadline != -1 && deadline <= System.currentTimeMillis()) {
+                delete(slice, Slice.reserved());
+                return false;
+            } else {
+                return true;
+            }
+        }
+        return false;
     }
 }

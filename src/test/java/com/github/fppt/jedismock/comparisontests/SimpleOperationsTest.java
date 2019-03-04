@@ -206,8 +206,53 @@ public class SimpleOperationsTest extends ComparisonBase {
     }
 
     @Theory
-    public void whenPoppingFromASet_EnsureTheSetIsUpdated(Jedis jedis){
+    public void whenDuplicateValuesAddedToSet_ReturnsAddedValuesCountOnly(Jedis jedis) {
+        String key = "my-set-key-sadd";
+        assertEquals(3, jedis.sadd(key, "A", "B", "C", "B").intValue());
+        assertEquals(1, jedis.sadd(key, "A", "C", "E", "B").intValue());
+    }
+
+    @Theory
+    public void whenAddingToASet_ensureCountIsUpdated(Jedis jedis){
+        String key = "my-counted-set-key";
+        Set<String> mySet = new HashSet<>(Arrays.asList("d", "e", "f"));
+
+        //Add everything from the set
+        mySet.forEach(value -> jedis.sadd(key, value));
+
+        //Get it all back
+        assertEquals(mySet.size(), jedis.scard(key).intValue());
+    }
+
+    @Theory
+    public void whenCalledForNonExistentSet_ensureScardReturnsZero(Jedis jedis){
+        String key = "non-existent";
+        assertEquals(0, jedis.scard(key).intValue());
+    }
+
+    @Theory
+    public void whenRemovingFromASet_EnsureTheSetIsUpdated(Jedis jedis){
         String key = "my-set-key";
+        Set<String> mySet = new HashSet<>(Arrays.asList("a", "b", "c", "d"));
+
+        //Add everything from the set
+        mySet.forEach(value -> jedis.sadd(key, value));
+
+        // Remove an element
+        mySet.remove("c");
+        mySet.remove("d");
+        mySet.remove("f");
+        int removed = jedis.srem(key, "c", "d", "f").intValue();
+
+        //Get it all back
+        assertEquals(mySet, jedis.smembers(key));
+        assertEquals(2, removed);
+    }
+
+    @Theory
+    public void whenPoppingFromASet_EnsureTheSetIsUpdated(Jedis jedis){
+
+        String key = "my-set-key-spop";
         Set<String> mySet = new HashSet<>(Arrays.asList("a", "b", "c", "d"));
 
         //Add everything from the set
@@ -343,5 +388,40 @@ public class SimpleOperationsTest extends ComparisonBase {
     @Theory
     public void whenGettingInfo_EnsureSomeDateIsReturned(Jedis jedis){
         assertNotNull(jedis.info());
+    }
+
+    @Theory
+    public void whenCreatingKeys_existsValuesUpdated(Jedis jedis){
+        jedis.set("foo", "bar");
+        assertTrue(jedis.exists("foo"));
+
+        assertFalse(jedis.exists("non-existent"));
+
+        jedis.hset("bar", "baz", "value");
+        assertTrue(jedis.exists("bar"));
+    }
+
+    @Theory
+    public void deletionRemovesKeys(Jedis jedis){
+        String key1 = "hey_toremove";
+        String key2 = "hmap_toremove";
+        jedis.set(key1, "value");
+        jedis.hset(key2, "field", "value");
+        assertTrue(jedis.exists(key1));
+        assertTrue(jedis.exists(key2));
+        int count = jedis.del(key1, key2).intValue();
+        assertEquals(2, count);
+        assertFalse(jedis.exists(key1));
+        assertFalse(jedis.exists(key2));
+    }
+
+    @Theory
+    public void timeReturnsCurrentTime(Jedis jedis) {
+        long currentTime = System.currentTimeMillis() / 1000;
+        List<String> time = jedis.time();
+        //We believe that results difference will be within one second
+        assertTrue(Math.abs(currentTime - Long.parseLong(time.get(0))) < 2);
+        //Microseconds are correct integer value
+        Long.parseLong(time.get(1));
     }
 }
