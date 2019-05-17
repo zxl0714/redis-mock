@@ -18,8 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 @RunWith(Theories.class)
 public class AdvanceOperationsTest extends ComparisonBase {
@@ -113,7 +112,7 @@ public class AdvanceOperationsTest extends ComparisonBase {
     }
 
     @Theory
-    public void whenUsingBrpoplpushAndReachingTimeout_Return(Jedis jedis){
+    public void whenUsingBrpoplpushAndReachingTimeout_Return(Jedis jedis) {
         String list1key = "another source list";
         String list2key = "another target list";
 
@@ -123,7 +122,7 @@ public class AdvanceOperationsTest extends ComparisonBase {
     }
 
     @Theory
-    public void whenUsingBrpoplpush_EnsureClientCanStillGetOtherResponsesInTimelyManner(Jedis jedis){
+    public void whenUsingBrpoplpush_EnsureClientCanStillGetOtherResponsesInTimelyManner(Jedis jedis) {
         String list1key = "another another source list";
         String list2key = "another another target list";
 
@@ -185,7 +184,7 @@ public class AdvanceOperationsTest extends ComparisonBase {
         subscriber.set("thing", "a-new-thing");
     }
 
-    private static void subscribeToChannel(Jedis subscriber, String channel){
+    private static void subscribeToChannel(Jedis subscriber, String channel) {
         System.out.println("Subscribing to :" + channel);
         subscriber.subscribe(new JedisPubSub() {
             @Override
@@ -197,7 +196,7 @@ public class AdvanceOperationsTest extends ComparisonBase {
     }
 
     @Theory
-    public void whenChangingBetweenRedisDBS_EnsureChangesAreMutuallyExclusive(Jedis jedis){
+    public void whenChangingBetweenRedisDBS_EnsureChangesAreMutuallyExclusive(Jedis jedis) {
         String key1 = "k1";
         String key2 = "k2";
 
@@ -227,4 +226,73 @@ public class AdvanceOperationsTest extends ComparisonBase {
         assertEquals(val2, jedis.get(key2));
     }
 
+
+    @Theory
+    public void whenUsingBlpop_EnsureItBlocksAndCorrectResultsAreReturned(Jedis jedis) throws ExecutionException, InterruptedException {
+        String key = "list1_kfubdjkfnv";
+        jedis.rpush(key, "d", "e", "f");
+        //Block on performing the BLPOP
+        Client client = jedis.getClient();
+        Jedis blockedClient = new Jedis(client.getHost(), client.getPort());
+        ExecutorService blockingThread = Executors.newSingleThreadExecutor();
+        Future future = blockingThread.submit(() -> {
+            List<String> result = blockedClient.blpop(10, key);
+            assertEquals(2, result.size());
+            assertEquals(key, result.get(0));
+            assertEquals("d", result.get(1));
+        });
+        future.get();
+        //Check the list is modified
+        List<String> results = jedis.lrange(key, 0, -1);
+        assertEquals(2, results.size());
+    }
+
+
+    @Theory
+    public void whenUsingBlpop_EnsureItBlocksAndCorrectResultsAreReturnedOnMultipleList(Jedis jedis) throws ExecutionException, InterruptedException {
+        String list1key = "list1_dkjfnvdk";
+        String list2key = "list2_kjvnddkf";
+        String list3key = "list3_oerurthv";
+
+
+        //Block on performing the BLPOP
+        Client client = jedis.getClient();
+        Jedis blockedClient = new Jedis(client.getHost(), client.getPort());
+        ExecutorService blockingThread = Executors.newSingleThreadExecutor();
+        Future future = blockingThread.submit(() -> {
+            List<String> result = blockedClient.blpop(10, list1key, list2key, list3key);
+            assertEquals(list2key, result.get(0));
+            assertEquals("a", result.get(1));
+        });
+        Thread.sleep(1000);
+        jedis.rpush(list2key, "a", "b", "c");
+        jedis.rpush(list3key, "d", "e", "f");
+        future.get();
+
+        //Check the list is modified
+        List<String> results = jedis.lrange(list2key, 0, -1);
+        assertEquals(2, results.size());
+        results = jedis.lrange(list3key, 0, -1);
+        assertEquals(3, results.size());
+    }
+
+    @Theory
+    public void whenUsingBlpop_EnsureItTimeout(Jedis jedis) throws ExecutionException, InterruptedException {
+        String list1key = "list1_kdjfnvdsu";
+        String list2key = "list2_mbhkdushy";
+        String list3key = "list3_qzkmpthju";
+
+        //Block on performing the BLPOP
+        Client client = jedis.getClient();
+        Jedis blockedClient = new Jedis(client.getHost(), client.getPort());
+        ExecutorService blockingThread = Executors.newSingleThreadExecutor();
+        Future future = blockingThread.submit(() -> {
+            List<String> result = blockedClient.blpop(1, list1key, list2key, list3key);
+            assertEquals(0, result.size());
+        });
+        //Check the list is not modified
+        List<String> results = jedis.lrange(list2key, 0, -1);
+        assertEquals(0, results.size());
+        future.get();
+    }
 }
