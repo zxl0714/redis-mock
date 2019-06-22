@@ -344,6 +344,25 @@ public class SimpleOperationsTest extends ComparisonBase {
     }
 
     @Theory
+    public void whenHKeys_EnsureAllKeysReturned(Jedis jedis){
+        jedis.hset(HASH, FIELD_1, VALUE_1);
+        jedis.hset(HASH, FIELD_2, VALUE_2);
+
+        Set<String> toCompare = new HashSet<String>();
+        toCompare.add(FIELD_1);
+        toCompare.add(FIELD_2);
+
+        Set<String> result = jedis.hkeys(HASH);
+        assertTrue(result.equals(toCompare));
+
+        toCompare.add(FIELD_3);
+        jedis.hset(HASH, FIELD_3, VALUE_3);
+
+        result = jedis.hkeys(HASH);
+        assertTrue(result.equals(toCompare));
+    }
+
+    @Theory
     public void whenUsingHsinter_EnsureSetIntersectionIsReturned(Jedis jedis) {
         String key1 = "my-set-key-1";
         Set<String> mySet1 = new HashSet<>(Arrays.asList("a", "b", "c", "d"));
