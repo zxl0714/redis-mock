@@ -295,6 +295,17 @@ public class SimpleOperationsTest extends ComparisonBase {
     }
 
     @Theory
+    public void whenHSettingAndHGetting_EnsureValuesAreSetAndExist(Jedis jedis){
+        String field = "my-field";
+        String hash = "my-hash";
+        String value = "my-value";
+
+        assertNull(jedis.hget(hash, field));
+        jedis.hset(hash, field, value);
+        assertTrue(jedis.hexists(hash, field));
+    }
+
+    @Theory
     public void whenHDeleting_EnsureValuesAreRemoved(Jedis jedis) {
         String field = "my-field-2";
         String hash = "my-hash-2";
