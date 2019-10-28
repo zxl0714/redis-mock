@@ -853,4 +853,60 @@ public class SimpleOperationsTest extends ComparisonBase {
         assertEquals("bbb", results.get(0));
         assertEquals("ccc", results.get(1));
     }
+
+    @Theory
+    public void incrDoesNotClearTtl(Jedis jedis) {
+        jedis.flushDB();
+
+        String key = "mykey";
+        jedis.set(key, "0");
+        jedis.expire(key, 100);
+
+        jedis.incr(key);
+        long ttl = jedis.ttl(key);
+
+        assertTrue(ttl > 0);
+    }
+
+    @Theory
+    public void incrByDoesNotClearTtl(Jedis jedis) {
+        jedis.flushDB();
+
+        String key = "mykey";
+        jedis.set(key, "0");
+        jedis.expire(key, 100);
+
+        jedis.incrBy(key, 10);
+        long ttl = jedis.ttl(key);
+
+        assertTrue(ttl > 0);
+    }
+
+    @Theory
+    public void decrDoesNotClearTtl(Jedis jedis) {
+        jedis.flushDB();
+
+        String key = "mykey";
+        jedis.set(key, "0");
+        jedis.expire(key, 100);
+
+        jedis.decr(key);
+        long ttl = jedis.ttl(key);
+
+        assertTrue(ttl > 0);
+    }
+
+    @Theory
+    public void decrByDoesNotClearTtl(Jedis jedis) {
+        jedis.flushDB();
+
+        String key = "mykey";
+        jedis.set(key, "0");
+        jedis.expire(key, 100);
+
+        jedis.decrBy(key, 10);
+        long ttl = jedis.ttl(key);
+
+        assertTrue(ttl > 0);
+    }
 }
