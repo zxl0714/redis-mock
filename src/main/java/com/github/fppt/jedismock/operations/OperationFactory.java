@@ -28,6 +28,7 @@ public class OperationFactory {
         TRANSACTIONAL_OPERATIONS.put("pexpire", RO_pexpire::new);
         TRANSACTIONAL_OPERATIONS.put("incr", RO_incr::new);
         TRANSACTIONAL_OPERATIONS.put("incrby", RO_incrby::new);
+        TRANSACTIONAL_OPERATIONS.put("incrbyfloat", RO_incrbyfloat::new);
         TRANSACTIONAL_OPERATIONS.put("decr", RO_decr::new);
         TRANSACTIONAL_OPERATIONS.put("decrby", RO_decrby::new);
         TRANSACTIONAL_OPERATIONS.put("pfcount", RO_pfcount::new);
@@ -70,6 +71,8 @@ public class OperationFactory {
         TRANSACTIONAL_OPERATIONS.put("hkeys", RO_hkeys::new);
         TRANSACTIONAL_OPERATIONS.put("hlen", RO_hlen::new);
         TRANSACTIONAL_OPERATIONS.put("hgetall", RO_hgetall::new);
+        TRANSACTIONAL_OPERATIONS.put("hincrby", RO_hincrby::new);
+        TRANSACTIONAL_OPERATIONS.put("hincrbyfloat", RO_hincrbyfloat::new);
         TRANSACTIONAL_OPERATIONS.put("sinter", RO_sinter::new);
         TRANSACTIONAL_OPERATIONS.put("hmget", RO_hmget::new);
         TRANSACTIONAL_OPERATIONS.put("hmset", RO_hmset::new);
