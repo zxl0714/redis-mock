@@ -55,6 +55,7 @@ public class OperationFactory {
         TRANSACTIONAL_OPERATIONS.put("publish", RO_publish::new);
         TRANSACTIONAL_OPERATIONS.put("flushall", RO_flushall::new);
         TRANSACTIONAL_OPERATIONS.put("flushdb", RO_flushdb::new);
+        TRANSACTIONAL_OPERATIONS.put("dbsize", RO_dbsize::new);
         TRANSACTIONAL_OPERATIONS.put("lrem", RO_lrem::new);
         TRANSACTIONAL_OPERATIONS.put("ping", RO_ping::new);
         TRANSACTIONAL_OPERATIONS.put("keys", RO_keys::new);

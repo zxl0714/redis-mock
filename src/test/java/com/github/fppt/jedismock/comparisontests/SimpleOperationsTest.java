@@ -911,6 +911,20 @@ public class SimpleOperationsTest extends ComparisonBase {
     }
 
     @Theory
+    public void dbSizeReturnsCount(Jedis jedis) {
+        jedis.flushDB();
+
+        jedis.hset(HASH, FIELD_1, VALUE_1);
+        jedis.hset(HASH, FIELD_2, VALUE_2);
+
+        jedis.set(FIELD_1, VALUE_1);
+
+        long result = jedis.dbSize();
+
+        assertEquals(2, result);
+    }
+
+    @Theory
     public void hashExpires(Jedis jedis) throws InterruptedException {
         jedis.flushDB();
 
