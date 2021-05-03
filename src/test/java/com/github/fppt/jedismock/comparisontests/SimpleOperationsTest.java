@@ -3,7 +3,6 @@ package com.github.fppt.jedismock.comparisontests;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import redis.clients.jedis.*;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.*;
@@ -136,15 +135,14 @@ public class SimpleOperationsTest {
     }
 
     @TestTemplate
-    public void whenUsingQuit_EnsureTheConnectionIsClosed(Jedis jedis) {
+    public void whenUsingQuit_EnsureTheResultIsOK(Jedis jedis) {
         //Create a new connection
         Client client = jedis.getClient();
         Jedis newJedis = new Jedis(client.getHost(), client.getPort());
         newJedis.set("A happy lucky key", "A sad value");
-        assertEquals("OK", newJedis.quit());
 
-        assertThrows(JedisConnectionException.class,
-            ()->newJedis.set("A happy lucky key", "A sad value 2"));
+        assertEquals("OK", newJedis.quit());
+        assertEquals("A sad value", jedis.get("A happy lucky key"));
     }
 
     @TestTemplate
@@ -553,7 +551,7 @@ public class SimpleOperationsTest {
 
         ScanResult<String> result = jedis.scan(ScanParams.SCAN_POINTER_START);
 
-        assertEquals(ScanParams.SCAN_POINTER_START, result.getStringCursor());
+        assertEquals(ScanParams.SCAN_POINTER_START, result.getCursor());
         assertEquals(2, result.getResult().size());
         assertTrue(result.getResult().contains(key));
         assertTrue(result.getResult().contains(key2));
@@ -573,7 +571,7 @@ public class SimpleOperationsTest {
         ScanResult<String> result = jedis.scan(ScanParams.SCAN_POINTER_START,
                 new ScanParams().match("scankeymatch:1*"));
 
-        assertEquals(ScanParams.SCAN_POINTER_START, result.getStringCursor());
+        assertEquals(ScanParams.SCAN_POINTER_START, result.getCursor());
         assertEquals(1, result.getResult().size());
         assertTrue(result.getResult().contains(key));
     }
@@ -591,7 +589,7 @@ public class SimpleOperationsTest {
         ScanResult<String> result = jedis.scan(ScanParams.SCAN_POINTER_START,
                 new ScanParams().match("scankeyi:1*").count(10));
 
-        assertNotEquals(ScanParams.SCAN_POINTER_START, result.getStringCursor());
+        assertNotEquals(ScanParams.SCAN_POINTER_START, result.getCursor());
     }
 
     @TestTemplate
@@ -627,7 +625,7 @@ public class SimpleOperationsTest {
         jedis.sadd(key, values);
 
         ScanResult<String> result = jedis.sscan(key, ScanParams.SCAN_POINTER_START, new ScanParams().count(13));
-        assertNotEquals(ScanParams.SCAN_POINTER_START, result.getStringCursor());
+        assertNotEquals(ScanParams.SCAN_POINTER_START, result.getCursor());
     }
 
     @TestTemplate
@@ -646,7 +644,7 @@ public class SimpleOperationsTest {
         ScanResult<String> result = jedis.sscan(key, ScanParams.SCAN_POINTER_START,
                 new ScanParams().match("21_value_0"));
 
-        assertEquals(ScanParams.SCAN_POINTER_START, result.getStringCursor());
+        assertEquals(ScanParams.SCAN_POINTER_START, result.getCursor());
         assertEquals(1, result.getResult().size());
         assertTrue(result.getResult().contains(values[0]));
     }
@@ -671,7 +669,7 @@ public class SimpleOperationsTest {
                 cursor = ScanParams.SCAN_POINTER_START;
             }
             ScanResult<String> result = jedis.sscan(key, cursor);
-            cursor = result.getStringCursor();
+            cursor = result.getCursor();
             results.addAll(result.getResult());
         }
 
@@ -964,6 +962,28 @@ public class SimpleOperationsTest {
         String result = jedis.hget(key, subkey);
 
         assertNull(result);
+    }
+
+    @TestTemplate
+    void hsetwithMap(Jedis jedis) {
+        jedis.flushDB();
+
+        Map<String, String> hash = new HashMap<>();
+        hash.put("k1", "v1");
+        hash.put("k2", "v2");
+        final Long added = jedis.hset("key", hash);
+
+        assertEquals(2, added);
+
+        // identity
+        final Long added1 = jedis.hset("key", hash);
+        assertEquals(0, added1);
+
+        // update
+        hash.put("k2", "v3");
+        final Long added2 = jedis.hset("key", hash);
+        assertEquals(0, added2);
+
     }
     
     @TestTemplate

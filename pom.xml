@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -39,8 +40,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <guava.version>19.0</guava.version>
         <junit.version>5.5.2</junit.version>
-        <redis.version>2.9.0</redis.version>
-        <redis-embedded.version>0.6</redis-embedded.version>
+        <jedis.version>3.6.0</jedis.version>
+        <testcontainers.version>1.15.3</testcontainers.version>
         <findbugs.version>3.0.1</findbugs.version>
         <slf4j.version>1.7.20</slf4j.version>
         <auto-value.version>1.6.2</auto-value.version>
@@ -73,14 +74,20 @@
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>${redis.version}</version>
+            <version>${jedis.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- Used for creating an embedded Redis for testing and comparing behaviour-->
+        <!-- Used for creating an testcontainer of Redis for testing and comparing behaviour-->
         <dependency>
-            <groupId>com.github.kstyrc</groupId>
-            <artifactId>embedded-redis</artifactId>
-            <version>${redis-embedded.version}</version>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- Used for finding common bugs in java projects -->
