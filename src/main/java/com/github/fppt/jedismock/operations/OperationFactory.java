@@ -89,7 +89,6 @@ public class OperationFactory {
         TRANSACTIONAL_OPERATIONS.put("zrange", RO_zrange::new);
         TRANSACTIONAL_OPERATIONS.put("zrangebylex", RO_zrangebylex::new);
         TRANSACTIONAL_OPERATIONS.put("zrem", RO_zrem::new);
-        TRANSACTIONAL_OPERATIONS.put("client", RO_client::new);
         TRANSACTIONAL_OPERATIONS.put("rename", RO_rename::new);
         TRANSACTIONAL_OPERATIONS.put("zscore", RO_zscore::new);
     }
@@ -119,6 +118,8 @@ public class OperationFactory {
                 return Optional.of(new RO_auth(state));
             case "exec":
                 return Optional.of(new RO_exec(state));
+            case "client":
+                return Optional.of(new RO_client());
             default:
                 return Optional.empty();
         }
