@@ -253,6 +253,7 @@ public class SimpleOperationsTest {
         assertEquals(31.41, jedis.hincrByFloat(key, "E", 0.01), 0.00001);
     }
 
+
     @TestTemplate
     public void whenAddingToASet_ensureCountIsUpdated(Jedis jedis) {
         String key = "my-counted-set-key";
@@ -908,6 +909,62 @@ public class SimpleOperationsTest {
         long ttl = jedis.ttl(key);
 
         assertTrue(ttl > 0);
+    }
+
+    @TestTemplate
+    public void whenIncrementingWithIncrByFloat_ensureValuesAreCorrect(Jedis jedis) {
+        jedis.flushDB();
+        jedis.set("key", "0");
+        jedis.incrByFloat("key", 1.);
+        assertEquals("1", jedis.get("key"));
+        jedis.incrByFloat("key", 1.5);
+        assertEquals("2.5", jedis.get("key"));
+    }
+
+    @TestTemplate
+    public void whenIncrementingWithHIncrByFloat_ensureValuesAreCorrect(Jedis jedis) {
+        jedis.flushDB();
+        jedis.hset("key", "subkey", "0");
+        jedis.hincrByFloat("key", "subkey", 1.);
+        assertEquals("1", jedis.hget("key", "subkey"));
+        jedis.hincrByFloat("key", "subkey", 1.5);
+        assertEquals("2.5", jedis.hget("key", "subkey"));
+    }
+
+    @TestTemplate
+    public void whenIncrementingWithIncrBy_ensureValuesAreCorrect(Jedis jedis) {
+        jedis.flushDB();
+        jedis.set("key", "0");
+        jedis.incrBy("key", 1);
+        assertEquals("1", jedis.get("key"));
+        jedis.incrBy("key", 2);
+        assertEquals("3", jedis.get("key"));
+    }
+
+    @TestTemplate
+    public void whenIncrementingWithHIncrBy_ensureValuesAreCorrect(Jedis jedis) {
+        jedis.flushDB();
+        jedis.hset("key", "subkey", "0");
+        jedis.hincrBy("key", "subkey", 1);
+        assertEquals("1", jedis.hget("key", "subkey"));
+        jedis.hincrBy("key", "subkey", 2);
+        assertEquals("3", jedis.hget("key", "subkey"));
+    }
+
+    @TestTemplate
+    public void whenIncrementingText_ensureException(Jedis jedis) {
+        jedis.flushDB();
+        jedis.set("key", "foo");
+        assertThrows(JedisDataException.class, ()->jedis.incrBy("key", 1));
+        assertThrows(JedisDataException.class, ()->jedis.incrByFloat("key", 1.5));
+    }
+
+    @TestTemplate
+    public void whenHIncrementingText_ensureException(Jedis jedis) {
+        jedis.flushDB();
+        jedis.hset("key", "subkey", "foo");
+        assertThrows(JedisDataException.class, ()->jedis.hincrBy("key", "subkey", 1));
+        assertThrows(JedisDataException.class, ()->jedis.hincrByFloat("key", "subkey", 1.5));
     }
 
     @TestTemplate
