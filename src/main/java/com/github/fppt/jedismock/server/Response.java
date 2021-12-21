@@ -1,9 +1,10 @@
 package com.github.fppt.jedismock.server;
 
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
+import com.github.fppt.jedismock.datastructures.Slice;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,10 +25,15 @@ public class Response {
         if (slice == null) {
             return NULL;
         }
-        ByteArrayDataOutput bo = ByteStreams.newDataOutput();
-        bo.write(String.format("$%d%s", slice.data().length, LINE_SEPARATOR).getBytes());
-        bo.write(slice.data());
-        bo.write(LINE_SEPARATOR.getBytes());
+        ByteArrayOutputStream bo = new ByteArrayOutputStream();
+
+        try {
+            bo.write(String.format("$%d%s", slice.data().length, LINE_SEPARATOR).getBytes());
+            bo.write(slice.data());
+            bo.write(LINE_SEPARATOR.getBytes());
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
         return Slice.create(bo.toByteArray());
     }
 
@@ -44,10 +50,14 @@ public class Response {
     }
 
     public static Slice array(List<Slice> values) {
-        ByteArrayDataOutput bo = ByteStreams.newDataOutput();
-        bo.write(String.format("*%d%s", values.size(), LINE_SEPARATOR).getBytes());
-        for (Slice value : values) {
-            bo.write(value.data());
+        ByteArrayOutputStream bo = new ByteArrayOutputStream();
+        try {
+            bo.write(String.format("*%d%s", values.size(), LINE_SEPARATOR).getBytes());
+            for (Slice value : values) {
+                bo.write(value.data());
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
         }
         return Slice.create(bo.toByteArray());
     }
@@ -63,19 +73,55 @@ public class Response {
         return array(slices);
     }
 
-    public static Slice subscribedToChannel(List<Slice> channels){
-        Slice operation = SliceParser.consumeParameter("$9\r\nsubscribe\r\n".getBytes());
+    public static Slice publishedPMessage(Slice pattern, Slice channel, Slice message){
+        Slice operation = SliceParser.consumeParameter("$8\r\npmessage\r\n".getBytes());
 
         List<Slice> slices = new ArrayList<>();
         slices.add(Response.bulkString(operation));
-        channels.forEach(channel -> slices.add(bulkString(channel)));
-        slices.add(Response.integer(channels.size()));
+        slices.add(Response.bulkString(pattern));
+        slices.add(Response.bulkString(channel));
+        slices.add(Response.bulkString(message));
 
+        return array(slices);
+    }
+
+    public static Slice subscribedToChannel(List<Slice> channels){
+        Slice operation = SliceParser.consumeParameter("$9\r\nsubscribe\r\n".getBytes());
+        List<Slice> slices = new ArrayList<>();
+        int i = 0;
+        for (Slice channel : channels) {
+            slices.add(Response.bulkString(operation));
+            slices.add(bulkString(channel));
+            slices.add(Response.integer(++i));
+        }
+        return array(slices);
+    }
+
+    public static Slice psubscribedToChannel(List<Slice> patterns){
+        Slice operation = SliceParser.consumeParameter("$10\r\npsubscribe\r\n".getBytes());
+        List<Slice> slices = new ArrayList<>();
+        int i = 0;
+        for (Slice pattern : patterns) {
+            slices.add(Response.bulkString(operation));
+            slices.add(bulkString(pattern));
+            slices.add(Response.integer(++i));
+        }
         return array(slices);
     }
 
     public static Slice unsubscribe(Slice channel, int remainingSubscriptions){
         Slice operation = SliceParser.consumeParameter("$11\r\nunsubscribe\r\n".getBytes());
+
+        List<Slice> slices = new ArrayList<>();
+        slices.add(Response.bulkString(operation));
+        slices.add(Response.bulkString(channel));
+        slices.add(Response.integer(remainingSubscriptions));
+
+        return array(slices);
+    }
+
+    public static Slice punsubscribe(Slice channel, int remainingSubscriptions){
+        Slice operation = SliceParser.consumeParameter("$12\r\npunsubscribe\r\n".getBytes());
 
         List<Slice> slices = new ArrayList<>();
         slices.add(Response.bulkString(operation));
@@ -92,5 +138,4 @@ public class Response {
         }
         return response;
     }
-
 }

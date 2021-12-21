@@ -1,6 +1,6 @@
 package com.github.fppt.jedismock;
 
-import com.github.fppt.jedismock.server.Slice;
+import com.github.fppt.jedismock.datastructures.Slice;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -29,11 +29,4 @@ public class TestUtils {
         });
     }
 
-
-    @Test
-    public void testSerializeAndDeserialize() {
-        Slice a = Slice.create("abcdef");
-        Slice b = Utils.deserializeObject(Utils.serializeObject(a));
-        assertArrayEquals(a.data(), b.data());
-    }
 }

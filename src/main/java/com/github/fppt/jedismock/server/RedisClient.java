@@ -1,12 +1,12 @@
 package com.github.fppt.jedismock.server;
 
+import com.github.fppt.jedismock.datastructures.Slice;
 import com.github.fppt.jedismock.storage.OperationExecutorState;
 import com.github.fppt.jedismock.storage.RedisBase;
 import com.github.fppt.jedismock.commands.RedisCommand;
 import com.github.fppt.jedismock.commands.RedisCommandParser;
 import com.github.fppt.jedismock.Utils;
 import com.github.fppt.jedismock.exception.ParseErrorException;
-import com.google.common.base.Preconditions;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -14,10 +14,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-;
 
 /**
  * Created by Xiaolu on 2015/4/18.
@@ -32,10 +31,9 @@ public class RedisClient implements Runnable {
     private final OutputStream out;
 
     RedisClient(Map<Integer, RedisBase> redisBases, Socket socket, ServiceOptions options) throws IOException {
-        Preconditions.checkNotNull(redisBases);
-        Preconditions.checkNotNull(socket);
-        Preconditions.checkNotNull(options);
-
+        Objects.requireNonNull(redisBases);
+        Objects.requireNonNull(socket);
+        Objects.requireNonNull(options);
         OperationExecutorState state = new OperationExecutorState(this, redisBases);
         this.executor = new RedisOperationExecutor(state);
         this.socket = socket;
@@ -46,21 +44,14 @@ public class RedisClient implements Runnable {
     }
 
     public void run() {
-        int count = 0;
         while (running.get() && !socket.isClosed()) {
             Optional<RedisCommand> command = nextCommand();
             if (command.isPresent()) {
                 Slice response = executor.execCommand(command.get());
                 sendResponse(response, command.toString());
-
-                count++;
-                if (options.autoCloseOn() != 0 && options.autoCloseOn() == count) {
-                    break;
-                }
             }
         }
-
-        LOG.debug("Mock redis connection shutting down.");
+        LOG.debug("Mock redis connection shut down.");
     }
 
     /**
@@ -101,5 +92,9 @@ public class RedisClient implements Runnable {
         Utils.closeQuietly(socket);
         Utils.closeQuietly(in);
         Utils.closeQuietly(out);
+    }
+
+    ServiceOptions options() {
+        return options;
     }
 }
