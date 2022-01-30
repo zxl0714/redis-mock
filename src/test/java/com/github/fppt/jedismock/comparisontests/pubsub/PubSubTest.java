@@ -8,6 +8,7 @@ import org.testcontainers.shaded.org.awaitility.Awaitility;
 import redis.clients.jedis.Client;
 import redis.clients.jedis.Jedis;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -90,6 +91,8 @@ public class PubSubTest {
             jedis.publish(channel, message);
             assertEquals(channel, subscription.getSubscriber().latestChannel());
             assertEquals(message, subscription.getSubscriber().latestMessage());
+            //Verify that the message is received only once
+            Awaitility.await().during(Duration.ofSeconds(1)).until(() -> subscription.getSubscriber().getMsgCount() == 1);
         }
     }
 

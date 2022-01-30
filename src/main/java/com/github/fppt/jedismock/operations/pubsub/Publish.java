@@ -25,14 +25,7 @@ class Publish extends AbstractRedisOperation {
         Set<RedisClient> subscribers = base().getSubscribers(channel);
 
         subscribers.forEach(subscriber -> {
-            Slice response = null;
-            response = Response.publishedMessage(channel, message);
-            subscriber.sendResponse(response, "contacting subscriber");
-        });
-
-        subscribers.forEach(subscriber -> {
-            Slice response = null;
-            response = Response.publishedMessage(channel, message);
+            Slice response = Response.publishedMessage(channel, message);
             subscriber.sendResponse(response, "contacting subscriber");
         });
 
