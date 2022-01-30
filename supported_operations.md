@@ -186,7 +186,7 @@
 :x: bzpopmin<br>
 :heavy_check_mark: zadd<br>
 :heavy_check_mark: zcard<br>
-:x: zcount<br>
+:heavy_check_mark: zcount<br>
 :x: zdiff<br>
 :x: zdiffstore<br>
 :x: zincrby<br>
