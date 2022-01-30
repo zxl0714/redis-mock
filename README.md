@@ -10,6 +10,8 @@ Despite its name, it works on network protocol level and can be used with any Re
 
 When used as a mock, it allows you to test any behaviour dependent on Redis without having to deploy an instance of Redis.
 
+[List of currently supported operations](supported_operations.md)
+
 ## Why, if we already have TestContainers?
 TestContainers is a great solution for integration tests with real services, including Redis.
 
