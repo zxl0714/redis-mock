@@ -178,6 +178,12 @@ public class HashOperationsTest {
     }
 
     @TestTemplate
+    void whenHLenIsCalledOnNonExistingKey_zeroIsReturned(Jedis jedis) {
+        Long non_existent = jedis.hlen("non_existent");
+        assertEquals(0, non_existent);
+    }
+
+    @TestTemplate
     public void whenUsingHMget_EnsureAllValuesReturnedForEachField(Jedis jedis) {
         jedis.hset(HASH, FIELD_1, VALUE_1);
         jedis.hset(HASH, FIELD_2, VALUE_2);
