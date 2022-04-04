@@ -8,8 +8,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -68,7 +67,7 @@ public class TestZRemRangeByScore {
 
         // then
         assertEquals(2, zremrangeByScoreResult);
-        final Set<String> zrangeResult = jedis.zrange(ZSET_KEY, 0, -1);
+        final List<String> zrangeResult = jedis.zrange(ZSET_KEY, 0, -1);
         assertEquals(1, zrangeResult.size());
         assertArrayEquals(zrangeResult.toArray(), new String[]{"three"});
     }
@@ -86,9 +85,9 @@ public class TestZRemRangeByScore {
 
         // then
         assertEquals(1, zremrangeByScoreResult);
-        final Set<String> zrangeResult = jedis.zrange(ZSET_KEY, 0, -1);
+        final List<String> zrangeResult = jedis.zrange(ZSET_KEY, 0, -1);
         assertEquals(2, zrangeResult.size());
-        assertEquals(new HashSet(Arrays.asList("three", "two")), zrangeResult);
+        assertEquals(Arrays.asList("two", "three"), zrangeResult);
     }
 
     @TestTemplate
@@ -111,9 +110,9 @@ public class TestZRemRangeByScore {
 
         // then
         assertEquals(4, zremrangeByScoreResult);
-        final Set<String> zrangeResult = jedis.zrange(ZSET_KEY, 0, -1);
+        final List<String> zrangeResult = jedis.zrange(ZSET_KEY, 0, -1);
         assertEquals(6, zrangeResult.size());
-        assertEquals(new HashSet(Arrays.asList("one", "two", "three", "four", "nine", "ten")), zrangeResult);
+        assertEquals(Arrays.asList("one", "two", "three", "four", "nine", "ten"), zrangeResult);
     }
 
 
