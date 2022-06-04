@@ -1,6 +1,6 @@
 package com.github.fppt.jedismock.operations.sortedsets;
 
-import com.github.fppt.jedismock.datastructures.RMHMap;
+import com.github.fppt.jedismock.datastructures.RMZSet;
 import com.github.fppt.jedismock.operations.AbstractRedisOperation;
 import com.github.fppt.jedismock.operations.RedisCommand;
 import com.github.fppt.jedismock.server.Response;
@@ -26,7 +26,7 @@ class ZAdd extends AbstractRedisOperation {
     protected Slice response() {
         Slice key = params().get(0);
 
-        final RMHMap mapDBObj = getHMapFromBaseOrCreateEmpty(key);
+        final RMZSet mapDBObj = getHMapFromBaseOrCreateEmpty(key);
         final Map<Slice, Double> map = mapDBObj.getStoredData();
 
         int count = 0;
@@ -49,11 +49,7 @@ class ZAdd extends AbstractRedisOperation {
             .collect(
                 toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
 
-        try {
-            base().putValue(key, new RMHMap(sortedMap));
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
-        }
+        base().putValue(key, new RMZSet(sortedMap));
         return Response.integer(count);
     }
 

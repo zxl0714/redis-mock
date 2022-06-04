@@ -43,9 +43,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <junit.version>5.8.2</junit.version>
-        <jedis.version>4.2.1</jedis.version>
-        <testcontainers.version>1.16.3</testcontainers.version>
-        <spotbugs.version>4.6.0.0</spotbugs.version>
+        <jedis.version>4.2.3</jedis.version>
+        <testcontainers.version>1.17.2</testcontainers.version>
+        <spotbugs.version>4.7.0.0</spotbugs.version>
         <slf4j.version>1.7.36</slf4j.version>
     </properties>
 
@@ -96,7 +96,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>4.4.0</version>
+            <version>4.6.1</version>
             <scope>test</scope>
         </dependency>
         <!-- SLF4J is the logging API all modules should use -->
@@ -160,7 +160,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.2</version>
+                <version>3.4.0</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -245,7 +245,7 @@
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.8</version>
+                        <version>1.6.13</version>
                         <extensions>true</extensions>
                         <configuration>
                             <serverId>ossrh</serverId>
