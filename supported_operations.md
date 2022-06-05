@@ -44,7 +44,7 @@
 :heavy_check_mark: hscan<br>
 :heavy_check_mark: hset<br>
 :heavy_check_mark: hsetnx<br>
-:x: hstrlen<br>
+:heavy_check_mark: hstrlen<br>
 :heavy_check_mark: hvals<br>
 
 ## HyperLogLog
