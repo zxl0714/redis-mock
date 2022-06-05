@@ -8,11 +8,15 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.resps.Tuple;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Arrays.asList;
-import static org.junit.jupiter.api.Assertions.*;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(ComparisonBase.class)
 public class TestZRangeByScore {
@@ -21,13 +25,13 @@ public class TestZRangeByScore {
 
     @BeforeEach
     public void clearKey(Jedis jedis) {
-        jedis.del(ZSET_KEY);
+        jedis.flushDB();
     }
 
     @TestTemplate
     public void whenUsingZrangeByScore_EnsureItReturnsEmptySetForNonDefinedKey(Jedis jedis) {
-        assertEquals(Collections.emptyList(), jedis.zrangeByScore(ZSET_KEY, "-inf", "+inf"));
-        assertEquals(Collections.emptyList(), jedis.zrangeByScoreWithScores(ZSET_KEY, "-inf", "+inf"));
+        assertEquals(emptyList(), jedis.zrangeByScore(ZSET_KEY, "-inf", "+inf"));
+        assertEquals(emptyList(), jedis.zrangeByScoreWithScores(ZSET_KEY, "-inf", "+inf"));
     }
 
     @TestTemplate
@@ -87,8 +91,8 @@ public class TestZRangeByScore {
         assertEquals(3, jedis.zrange(ZSET_KEY, 0, -1).size());
 
         // then
-        assertEquals(Collections.singletonList("one"), jedis.zrangeByScore(ZSET_KEY, "-inf", "(2"));
-        assertEquals(Collections.singletonList(new Tuple("one", 1.)),
+        assertEquals(singletonList("one"), jedis.zrangeByScore(ZSET_KEY, "-inf", "(2"));
+        assertEquals(singletonList(new Tuple("one", 1.)),
                 jedis.zrangeByScoreWithScores(ZSET_KEY, "-inf", "(2"));
     }
 
@@ -178,5 +182,21 @@ public class TestZRangeByScore {
                 () -> jedis.zrangeByScore(ZSET_KEY, "1.e", "2.d"));
         assertThrows(RuntimeException.class,
                 () -> jedis.zrangeByScore(ZSET_KEY, "FOO", "BAR"));
+    }
+
+    @TestTemplate
+    void sortElementsWithSameScoreLexicographically(Jedis jedis) {
+        jedis.zadd("foo", 42, "def");
+        jedis.zadd("foo", 42, "abc");
+        final List<String> list = jedis.zrangeByScore("foo", 42, 42, 0, 1);
+        assertEquals(singletonList("abc"), list);
+    }
+
+    @TestTemplate
+    void minusInfinity(Jedis jedis) {
+        jedis.zadd("foo", 0, "abc");
+        jedis.zadd("foo", 1, "def");
+        final List<String> list = jedis.zrangeByScore("foo", "-inf", "+inf");
+        assertEquals(Arrays.asList("abc", "def"), list);
     }
 }
