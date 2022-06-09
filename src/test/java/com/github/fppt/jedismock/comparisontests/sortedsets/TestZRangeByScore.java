@@ -199,4 +199,10 @@ public class TestZRangeByScore {
         final List<String> list = jedis.zrangeByScore("foo", "-inf", "+inf");
         assertEquals(Arrays.asList("abc", "def"), list);
     }
+
+    @TestTemplate
+    void outOfOrderBounds(Jedis jedis) {
+        jedis.zadd("foo", 42, "bar");
+        assertEquals(0, jedis.zrangeByScore("foo", 5, 2).size());
+    }
 }
