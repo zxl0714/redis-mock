@@ -95,7 +95,7 @@ public class RedisBase {
             return (RMBitMap) value;
         }
         if (value instanceof RMString) {
-            return new RMBitMap(((RMString) value).getStoredData().getBytes());
+            return new RMBitMap(((RMString) value).getStoredData());
         }
         value.raiseTypeCastException();
         return null;

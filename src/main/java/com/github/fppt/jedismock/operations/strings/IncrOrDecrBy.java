@@ -27,7 +27,7 @@ abstract class IncrOrDecrBy extends AbstractRedisOperation {
             return Response.integer(d);
         }
 
-        long r = convertToLong(v.getStoredData()) + d;
+        long r = convertToLong(v.getStoredDataAsString()) + d;
         base().putValueWithoutClearingTtl(key, RMString.create(String.valueOf(r)));
         return Response.integer(r);
     }

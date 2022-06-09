@@ -17,15 +17,15 @@ class Append extends AbstractRedisOperation {
 
     protected Slice response() {
         Slice key = params().get(0);
-        String value = params().get(1).toString();
+        Slice value = params().get(1);
         RMString s = base().getRMString(key);
 
         if (s == null) {
-            base().putValue(key, RMString.create(value));
+            base().putValue(key, RMString.create(value.data()));
             return Response.integer(value.length());
         }
 
-        s.add(value);
+        s.add(value.data());
         base().putValue(key, s);
         return Response.integer(s.size());
     }
