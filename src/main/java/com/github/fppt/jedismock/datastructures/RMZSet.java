@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
+import static java.util.Collections.emptyNavigableSet;
 import static java.util.Collections.unmodifiableNavigableSet;
 
 
@@ -47,8 +48,12 @@ public class RMZSet implements RMDataStructure {
 
     public NavigableSet<ZSetEntry> subset(ZSetEntryBound start,
                                           ZSetEntryBound end) {
-        return unmodifiableNavigableSet(entries.subSet(start.getBound(), start.isInclusive(),
-                end.getBound(), end.isInclusive()));
+        if (start.getBound().compareTo(end.getBound()) > 0) {
+            return emptyNavigableSet();
+        } else {
+            return unmodifiableNavigableSet(entries.subSet(start.getBound(), start.isInclusive(),
+                    end.getBound(), end.isInclusive()));
+        }
     }
 
     public NavigableSet<ZSetEntry> entries(boolean reversed) {

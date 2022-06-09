@@ -44,4 +44,10 @@ public class TestZRevRangeByScore {
         final List<String> list = jedis.zrevrangeByScore("foo", "+inf", "-inf");
         assertEquals(Arrays.asList("def", "abc"), list);
     }
+
+    @TestTemplate
+    void outOfOrderBounds(Jedis jedis) {
+        jedis.zadd("foo", 42, "bar");
+        assertEquals(0, jedis.zrevrangeByScore("foo", 2, 5).size());
+    }
 }
