@@ -82,6 +82,6 @@ public class Slice implements Comparable<Slice>, Serializable {
             }
         }
 
-        return RMString.create(this.toString());
+        return RMString.create(this.data());
     }
 }

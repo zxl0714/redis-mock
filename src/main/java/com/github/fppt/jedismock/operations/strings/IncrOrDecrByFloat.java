@@ -20,7 +20,7 @@ abstract class IncrOrDecrByFloat extends AbstractRedisOperation {
 
         RMString foundValue = base().getRMString(key);
         if (foundValue != null) {
-            numericValue = numericValue.add(new BigDecimal(foundValue.getStoredData()));
+            numericValue = numericValue.add(new BigDecimal(foundValue.getStoredDataAsString()));
         }
 
         String data = String.valueOf(BigDecimal.valueOf(numericValue.intValue()).compareTo(numericValue) == 0

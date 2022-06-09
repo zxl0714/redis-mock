@@ -6,6 +6,7 @@ import com.github.fppt.jedismock.server.Response;
 import com.github.fppt.jedismock.datastructures.Slice;
 import com.github.fppt.jedismock.storage.RedisBase;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static com.github.fppt.jedismock.Utils.convertToLong;
@@ -27,7 +28,7 @@ abstract class IncrOrDecrBy extends AbstractRedisOperation {
             return Response.integer(d);
         }
 
-        long r = convertToLong(v.getStoredData()) + d;
+        long r = convertToLong(v.getStoredDataAsString()) + d;
         base().putValueWithoutClearingTtl(key, RMString.create(String.valueOf(r)));
         return Response.integer(r);
     }

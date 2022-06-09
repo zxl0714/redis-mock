@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.params.SetParams;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -19,7 +20,7 @@ public class TestSet {
 
     @BeforeEach
     public void clearKey(Jedis jedis) {
-        jedis.del(SET_KEY);
+        jedis.flushDB();
     }
 
     // SET key value NX
@@ -56,7 +57,7 @@ public class TestSet {
     @TestTemplate
     public void testSetEXNXexpires(Jedis jedis) throws InterruptedException {
         testSetValueExpires(jedis, new SetParams().ex(1L).nx());
-    } //--------------------------------------------
+    }
 
     @TestTemplate
     public void testSetEXNXnotexists(Jedis jedis) {
@@ -96,6 +97,13 @@ public class TestSet {
     @TestTemplate
     public void testSetPXXXnotexists(Jedis jedis) {
         testSetXXWithParams(jedis, new SetParams().px(1000L).xx());
+    }
+
+    @TestTemplate
+    public void testSetNonUTF8binary(Jedis jedis) {
+        byte[] msg = new byte[]{(byte) 0xbe};
+        jedis.set("foo".getBytes(), msg);
+        assertArrayEquals(msg, jedis.get("foo".getBytes()));
     }
 
     private void testSetValueExpires(Jedis jedis, SetParams setParams) throws InterruptedException {
