@@ -1,6 +1,5 @@
 package com.github.fppt.jedismock.operations.strings;
 
-import com.github.fppt.jedismock.datastructures.RMString;
 import com.github.fppt.jedismock.operations.AbstractRedisOperation;
 import com.github.fppt.jedismock.operations.RedisCommand;
 import com.github.fppt.jedismock.server.Response;
@@ -17,7 +16,7 @@ class MSet extends AbstractRedisOperation {
 
     protected Slice response() {
         for (int i = 0; i < params().size(); i += 2) {
-            base().putValue(params().get(i), RMString.create(params().get(i + 1).data()));
+            base().putValue(params().get(i), params().get(i + 1).extract());
         }
         return Response.OK;
     }
