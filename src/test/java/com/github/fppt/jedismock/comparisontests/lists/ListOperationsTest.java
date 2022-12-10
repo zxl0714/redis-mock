@@ -7,8 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisDataException;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -61,7 +59,6 @@ public class ListOperationsTest {
         assertEquals(singletonList("1"), jedis.rpop(key, 5));
         assertNull(jedis.rpop(key, 5));
     }
-
 
     @TestTemplate
     public void whenUsingRpoplpush_CorrectResultsAreReturned(Jedis jedis) {
