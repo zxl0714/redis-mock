@@ -20,7 +20,7 @@ class HIncrBy extends AbstractRedisOperation {
         long numericValue = convertToLong(String.valueOf(value));
         Slice foundValue = base().getSlice(key1, key2);
         if (foundValue != null) {
-            numericValue = convertToLong(new String(foundValue.data())) + numericValue;
+            numericValue = Math.addExact(convertToLong(new String(foundValue.data())), numericValue);
         }
         base().putSlice(key1, key2, Slice.create(String.valueOf(numericValue)), -1L);
         return Response.integer(numericValue);

@@ -74,7 +74,7 @@ public class RedisBase {
         return getStructure(key, RMList.class);
     }
 
-    private RMHash getHash(Slice key) {
+    public RMHash getHash(Slice key) {
         return getStructure(key, RMHash.class);
     }
 

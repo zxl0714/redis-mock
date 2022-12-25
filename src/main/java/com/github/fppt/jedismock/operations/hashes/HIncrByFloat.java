@@ -5,8 +5,12 @@ import com.github.fppt.jedismock.server.Response;
 import com.github.fppt.jedismock.datastructures.Slice;
 import com.github.fppt.jedismock.storage.RedisBase;
 
-import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.List;
+import java.util.Locale;
+
+import static com.github.fppt.jedismock.Utils.convertToDouble;
 
 @RedisCommand("hincrbyfloat")
 class HIncrByFloat extends HIncrBy {
@@ -14,18 +18,47 @@ class HIncrByFloat extends HIncrBy {
         super(base, params);
     }
 
+    private void validateHIncrByFloatArgument(Slice input) {
+
+        final String errorMessage = "ERROR: HINCRBYFLOAT argument is not a float value";
+
+        // validate input is not started/ended with spaces
+        String foundValueStr = String.valueOf(input);
+        if (foundValueStr.startsWith(" ") || foundValueStr.endsWith(" ")) {
+            throw new IllegalArgumentException(errorMessage);
+        }
+
+        // validate input doesn't contain null-terminator symbols
+        byte[] bts = input.data();
+        for (int i = 0; i < bts.length; ++i) {
+            if (bts[i] == 0) {
+                throw new IllegalArgumentException(errorMessage);
+            }
+        }
+    }
+
     Slice hsetValue(Slice key1, Slice key2, Slice value) {
-        BigDecimal numericValue = new BigDecimal(value.toString());
+        double numericValue = convertToDouble(String.valueOf(value));
         Slice foundValue = base().getSlice(key1, key2);
         if (foundValue != null) {
-            numericValue = numericValue.add(new BigDecimal((new String(foundValue.data()))));
+            validateHIncrByFloatArgument(foundValue);
+            numericValue = convertToDouble(new String(foundValue.data())) + numericValue;
         }
-        String data = String.valueOf(BigDecimal.valueOf(numericValue.intValue()).compareTo(numericValue) == 0
-                ? numericValue.intValue() : numericValue);
-
-        Slice res = Slice.create(data);
+        // real redis returns 17 digits after dot
+        DecimalFormatSymbols separator = new DecimalFormatSymbols(Locale.getDefault());
+        separator.setDecimalSeparator('.');
+        DecimalFormat formatter = new DecimalFormat("#.#################", separator);
+        Slice res = Slice.create(formatter.format(numericValue));
         base().putSlice(key1, key2, res, -1L);
-
         return Response.bulkString(res);
+    }
+
+    @Override
+    protected Slice response() {
+        Slice key1 = params().get(0);
+        Slice key2 = params().get(1);
+        Slice value = params().get(2);
+
+        return hsetValue(key1, key2, value);
     }
 }

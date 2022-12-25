@@ -63,7 +63,7 @@ public abstract class AbstractRedisOperation implements RedisOperation {
             doOptionalWork();
             return response();
         } catch (IndexOutOfBoundsException e){
-            throw new IllegalArgumentException("Invalid number of arguments when executing command [" + getClass().getSimpleName() + "]", e);
+            throw new IllegalArgumentException("Recieved wrong number of arguments when executing command [" + getClass().getSimpleName() + "]", e);
         }
     }
 }
