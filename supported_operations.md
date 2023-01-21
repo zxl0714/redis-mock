@@ -89,7 +89,7 @@
 :x: touch<br>
 :heavy_check_mark: ttl<br>
 :heavy_check_mark: type<br>
-:x: unlink<br>
+:heavy_check_mark: unlink<br>
 :x: wait<br>
 :x: xsetid<br>
 
