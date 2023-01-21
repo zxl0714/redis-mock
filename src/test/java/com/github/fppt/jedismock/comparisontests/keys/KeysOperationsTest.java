@@ -75,6 +75,14 @@ public class KeysOperationsTest {
     }
 
     @TestTemplate
+    public void unlinkingRemovesKeys(Jedis jedis) {
+        jedis.set("key1", "Hello");
+        jedis.set("key2", "World");
+        long count = jedis.unlink("key1", "key2", "key3");
+        assertEquals(2, count);
+    }
+
+    @TestTemplate
     public void hashExpires(Jedis jedis) throws InterruptedException {
         String key = "mykey";
         String subkey = "mysubkey";
