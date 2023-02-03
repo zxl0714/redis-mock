@@ -1,5 +1,6 @@
 package com.github.fppt.jedismock.operations.strings;
 
+import com.github.fppt.jedismock.datastructures.RMString;
 import com.github.fppt.jedismock.operations.AbstractRedisOperation;
 import com.github.fppt.jedismock.operations.RedisCommand;
 import com.github.fppt.jedismock.server.Response;
@@ -17,8 +18,10 @@ class MGet extends AbstractRedisOperation {
     }
 
     protected Slice response() {
+        RedisBase base = base();
         return Response.array(params().stream()
-                .map(key-> base().getRMString(key) != null ? (base().getRMString(key).getAsSlice()) : null)
+                .map(base::getValue)
+                .map(s -> s instanceof RMString ? (s.getAsSlice()) : null)
                 .map(Response::bulkString)
                 .collect(toList()));
     }
