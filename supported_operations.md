@@ -252,7 +252,7 @@
 :heavy_check_mark: incrbyfloat<br>
 :heavy_check_mark: mget<br>
 :heavy_check_mark: mset<br>
-:x: msetnx<br>
+:heavy_check_mark: msetnx<br>
 :heavy_check_mark: psetex<br>
 :heavy_check_mark: set<br>
 :heavy_check_mark: setbit<br>
