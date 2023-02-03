@@ -258,7 +258,7 @@
 :heavy_check_mark: setbit<br>
 :heavy_check_mark: setex<br>
 :heavy_check_mark: setnx<br>
-:x: setrange<br>
+:heavy_check_mark: setrange<br>
 :x: stralgo<br>
 :heavy_check_mark: strlen<br>
 
