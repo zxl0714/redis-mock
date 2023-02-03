@@ -18,9 +18,9 @@ class HIncrByFloat extends HIncrBy {
         super(base, params);
     }
 
-    private void validateHIncrByFloatArgument(Slice input) {
+    private static void validateHIncrByFloatArgument(Slice input) {
 
-        final String errorMessage = "ERROR: HINCRBYFLOAT argument is not a float value";
+        final String errorMessage = "ERR value is not a valid float";
 
         // validate input is not started/ended with spaces
         String foundValueStr = String.valueOf(input);
@@ -30,8 +30,8 @@ class HIncrByFloat extends HIncrBy {
 
         // validate input doesn't contain null-terminator symbols
         byte[] bts = input.data();
-        for (int i = 0; i < bts.length; ++i) {
-            if (bts[i] == 0) {
+        for (byte bt : bts) {
+            if (bt == 0) {
                 throw new IllegalArgumentException(errorMessage);
             }
         }
