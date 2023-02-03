@@ -14,13 +14,29 @@ abstract class IncrOrDecrByFloat extends AbstractRedisOperation {
         super(base, params);
     }
 
+    private static BigDecimal toBigDecimal(String value) {
+        if (value != null) {
+            if (value.toLowerCase().endsWith("inf")) {
+                throw new NumberFormatException("ERR increment would produce NaN or Infinity");
+            } else try {
+                return new BigDecimal(value);
+            } catch (NumberFormatException e) {
+                NumberFormatException modified = new NumberFormatException("ERR value is not a valid float");
+                modified.initCause(e);
+                throw modified;
+            }
+        } else {
+            throw new NumberFormatException("ERR value is not a valid float");
+        }
+    }
+
     protected Slice response() {
         Slice key = params().get(0);
-        BigDecimal numericValue = new BigDecimal(params().get(1).toString());
+        BigDecimal numericValue = toBigDecimal(params().get(1).toString());
 
         RMString foundValue = base().getRMString(key);
         if (foundValue != null) {
-            numericValue = numericValue.add(new BigDecimal(foundValue.getStoredDataAsString()));
+            numericValue = numericValue.add(toBigDecimal(foundValue.getStoredDataAsString()));
         }
 
         String data = String.valueOf(BigDecimal.valueOf(numericValue.intValue()).compareTo(numericValue) == 0
