@@ -100,7 +100,7 @@
 :heavy_check_mark: brpop<br>
 :heavy_check_mark: brpoplpush<br>
 :heavy_check_mark: lindex<br>
-:x: linsert<br>
+:heavy_check_mark: linsert<br>
 :heavy_check_mark: llen<br>
 :x: lmove<br>
 :heavy_check_mark: lpop<br>
