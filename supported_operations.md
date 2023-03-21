@@ -109,7 +109,7 @@
 :heavy_check_mark: lpushx<br>
 :heavy_check_mark: lrange<br>
 :heavy_check_mark: lrem<br>
-:x: lset<br>
+:heavy_check_mark: lset<br>
 :heavy_check_mark: ltrim<br>
 :heavy_check_mark: rpop<br>
 :heavy_check_mark: rpoplpush<br>
