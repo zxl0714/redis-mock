@@ -104,7 +104,7 @@
 :heavy_check_mark: llen<br>
 :x: lmove<br>
 :heavy_check_mark: lpop<br>
-:x: lpos<br>
+:heavy_check_mark: lpos<br>
 :heavy_check_mark: lpush<br>
 :heavy_check_mark: lpushx<br>
 :heavy_check_mark: lrange<br>
