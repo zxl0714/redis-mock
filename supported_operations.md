@@ -1,33 +1,5 @@
 # Supported operations:
 
-## Connection
-
-:heavy_check_mark: auth<br>
-:heavy_check_mark: client<br>
-:x: echo<br>
-:heavy_check_mark: hello<br>
-:heavy_check_mark: ping<br>
-:heavy_check_mark: quit<br>
-:x: reset<br>
-:heavy_check_mark: select<br>
-
-## Cluster
-
-:x: cluster<br>
-:x: readonly<br>
-:x: readwrite<br>
-
-## Geo
-
-:x: geoadd<br>
-:x: geodist<br>
-:x: geohash<br>
-:x: geopos<br>
-:x: georadius<br>
-:x: georadiusbymember<br>
-:x: geosearch<br>
-:x: geosearchstore<br>
-
 ## Hashes
 
 :heavy_check_mark: hdel<br>
