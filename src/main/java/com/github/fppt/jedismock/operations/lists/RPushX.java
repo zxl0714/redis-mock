@@ -1,24 +1,24 @@
 package com.github.fppt.jedismock.operations.lists;
 
-import com.github.fppt.jedismock.operations.RedisCommand;
-import com.github.fppt.jedismock.storage.OperationExecutorState;
-import com.github.fppt.jedismock.server.Response;
 import com.github.fppt.jedismock.datastructures.Slice;
+import com.github.fppt.jedismock.operations.RedisCommand;
+import com.github.fppt.jedismock.server.Response;
+import com.github.fppt.jedismock.storage.OperationExecutorState;
 
 import java.util.List;
 
-@RedisCommand("lpushx")
-class LPushX extends LPush {
-    LPushX(OperationExecutorState state, List<Slice> params) {
+@RedisCommand("rpushx")
+public class RPushX extends RPush {
+    RPushX(OperationExecutorState state, List<Slice> params) {
         super(state, params);
     }
 
     @Override
-    protected Slice response(){
+    protected Slice response() {
         Slice key = params().get(0);
         boolean exists = base().exists(key);
 
-        if(exists){
+        if (exists) {
             return super.response();
         }
 
