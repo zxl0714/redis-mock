@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisDataException;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -298,5 +299,16 @@ public class HashOperationsTest {
         jedis.hset("foo", "bar", "");
         assertEquals("", jedis.hget("foo", "bar"));
     }
+
+    @TestTemplate
+    public void testHsetDoesntFailOnLongPayload(Jedis jedis) {
+        // 1001 symbol string
+        char[] buf = new char[1001];
+        Arrays.fill(buf, 'a');
+        String value = new String(buf);
+        jedis.hset("foo", "bar", value);
+        assertEquals(value, jedis.hget("foo", "bar"));
+    }
+
 
 }

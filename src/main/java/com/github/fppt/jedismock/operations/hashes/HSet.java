@@ -34,11 +34,11 @@ class HSet extends AbstractRedisOperation {
         for(int i = 1; i < params().size(); i = i + 2){
             Slice field = params().get(i);
             Slice value = params().get(i+1);
+            Slice oldValue = hsetValue(hash, field, value);
             if (value.length() > 1000) {
                 RMHash cls = base().getHash(hash);
                 cls.upgradeEncoding();
             }
-            Slice oldValue = hsetValue(hash, field, value);
 
             if(oldValue == null) {
                 count++;
