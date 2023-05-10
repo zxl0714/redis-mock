@@ -174,7 +174,7 @@
 :x: smismember<br>
 :x: smove<br>
 :heavy_check_mark: spop<br>
-:x: srandmember<br>
+:heavy_check_mark: srandmember<br>
 :heavy_check_mark: srem<br>
 :heavy_check_mark: sscan<br>
 :x: sunion<br>
