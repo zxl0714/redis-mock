@@ -28,7 +28,11 @@ public class ZRemRangeByScore extends AbstractByScoreOperation {
         for (ZSetEntry entry : subset) {
             mapDBObj.remove(entry.getValue());
         }
-        base().putValue(key, mapDBObj);
+        if (mapDBObj.isEmpty()) {
+            base().deleteValue(key);
+        } else {
+            base().putValue(key, mapDBObj);
+        }
         return Response.integer(subset.size());
     }
 }

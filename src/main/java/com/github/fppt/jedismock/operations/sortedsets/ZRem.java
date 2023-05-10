@@ -28,6 +28,10 @@ class ZRem extends AbstractRedisOperation {
                 count++;
             }
         }
+
+        if (mapDBObj.isEmpty()) {
+            base().deleteValue(key);
+        }
         return Response.integer(count);
     }
 }

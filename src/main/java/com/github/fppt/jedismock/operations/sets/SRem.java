@@ -22,12 +22,15 @@ class SRem extends AbstractRedisOperation {
         Slice key = params().get(0);
         RMSet setDBObj = getSetFromBaseOrCreateEmpty(key);
         Set<Slice> set = setDBObj.getStoredData();
-        if(set == null || set.isEmpty()) return Response.integer(0);
+        if(set == null) return Response.integer(0);
         int count = 0;
         for (int i = 1; i < params().size(); i++) {
             if (set.remove(params().get(i))) {
                 count++;
             }
+        }
+        if (set.isEmpty()) {
+            base().deleteValue(key);
         }
         return Response.integer(count);
     }

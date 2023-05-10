@@ -116,4 +116,44 @@ public class KeysOperationsTest {
         assertEquals(2, results.size());
         assertTrue(results.contains("{hashslot}:one") && results.contains("{hashslot}:two"));
     }
+
+    @TestTemplate
+    public void setNotExistsAfterAllElementsRemoved(Jedis jedis) {
+        jedis.sadd("foo", "bar");
+        jedis.srem("foo", "bar");
+        assertFalse(jedis.exists("foo"));
+        assertEquals(-2, jedis.ttl("foo"));
+    }
+
+    @TestTemplate
+    public void zSetNotExistsAfterAllElementsRemoved(Jedis jedis) {
+        jedis.zadd("foo", 42, "bar");
+        jedis.zrem("foo", "bar");
+        assertFalse(jedis.exists("foo"));
+        assertEquals(-2, jedis.ttl("foo"));
+    }
+
+    @TestTemplate
+    public void zSetNotExistsAfterAllElementsRemovedByScore(Jedis jedis) {
+        jedis.zadd("foo", 42, "bar");
+        jedis.zremrangeByScore("foo", 41, 43);
+        assertFalse(jedis.exists("foo"));
+        assertEquals(-2, jedis.ttl("foo"));
+    }
+
+    @TestTemplate
+    public void listNotExistsAfterAllElementsRemoved(Jedis jedis) {
+        jedis.lpush("foo", "bar");
+        jedis.lpop("foo");
+        assertFalse(jedis.exists("foo"));
+        assertEquals(-2, jedis.ttl("foo"));
+    }
+
+    @TestTemplate
+    public void hsetNotExistsAfterAllElementsRemoved(Jedis jedis) {
+        jedis.hset("foo", "bar", "baz");
+        jedis.hdel("foo", "bar");
+        assertFalse(jedis.exists("foo"));
+        assertEquals(-2, jedis.ttl("foo"));
+    }
 }
