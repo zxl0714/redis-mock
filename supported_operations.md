@@ -127,9 +127,9 @@
 
 ## Scripting
 
-:x: eval<br>
-:x: evalsha<br>
-:x: script<br>
+:heavy_check_mark: eval<br>
+:heavy_check_mark: evalsha<br>
+:heavy_check_mark: script<br>
 
 ## Server
 
@@ -174,7 +174,7 @@
 :x: smismember<br>
 :x: smove<br>
 :heavy_check_mark: spop<br>
-:heavy_check_mark: srandmember<br>
+:x: srandmember<br>
 :heavy_check_mark: srem<br>
 :heavy_check_mark: sscan<br>
 :x: sunion<br>
@@ -269,3 +269,4 @@
 :heavy_check_mark: multi<br>
 :heavy_check_mark: unwatch<br>
 :heavy_check_mark: watch<br>
+

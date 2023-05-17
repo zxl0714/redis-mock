@@ -51,8 +51,8 @@ public class ComparisonBase implements TestTemplateInvocationContextProvider,
                         new Jedis(fakeServer.getHost(), fakeServer.getBindPort(), 1000000),
                         new HostAndPort(fakeServer.getHost(), fakeServer.getBindPort())),
                 new JedisTestTemplateInvocationContext("real",
-                        new Jedis(redis.getContainerIpAddress(), redis.getFirstMappedPort()),
-                        new HostAndPort(redis.getContainerIpAddress(), redis.getFirstMappedPort())));
+                        new Jedis(redis.getHost(), redis.getFirstMappedPort()),
+                        new HostAndPort(redis.getHost(), redis.getFirstMappedPort())));
     }
 
     private static class JedisTestTemplateInvocationContext implements TestTemplateInvocationContext {
