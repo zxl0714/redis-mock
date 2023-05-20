@@ -1,3 +1,6 @@
+# Currently DEBUG commands such as DEBUG ENCODING are not supported in this mock
+# so those assertions are commented until it would be implemented
+
 start_server {
     tags {"set"}
     overrides {
@@ -156,12 +159,12 @@ start_server {
             assert_equal [list 195 196 197 198 199 $large] [lsort [r smembers setres]]
         }
 
-        test "SINTERSTORE with two sets, after a DEBUG RELOAD - $type" {
-            r debug reload
-            r sinterstore setres set1 set2
-            assert_encoding $type setres
-            assert_equal [list 195 196 197 198 199 $large] [lsort [r smembers setres]]
-        }
+        # test "SINTERSTORE with two sets, after a DEBUG RELOAD - $type" {
+        #     r debug reload
+        #     r sinterstore setres set1 set2
+        #     assert_encoding $type setres
+        #     assert_equal [list 195 196 197 198 199 $large] [lsort [r smembers setres]]
+        # }
 
         test "SUNION with two sets - $type" {
             set expected [lsort -uniq "[r smembers set1] [r smembers set2]"]

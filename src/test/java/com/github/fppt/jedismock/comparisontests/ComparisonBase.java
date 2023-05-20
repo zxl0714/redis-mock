@@ -25,7 +25,7 @@ public class ComparisonBase implements TestTemplateInvocationContextProvider,
         redis.start();
 
         //Start up the fake redis server
-        fakeServer = RedisServer.newRedisServer(redis.getFirstMappedPort() + 1);
+        fakeServer = RedisServer.newRedisServer();
         fakeServer.start();
     }
 

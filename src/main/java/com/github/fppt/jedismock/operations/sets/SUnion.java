@@ -14,28 +14,28 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.HashSet;
 
-@RedisCommand("sinter")
-class SInter extends AbstractRedisOperation {
-    SInter(RedisBase base, List<Slice> params) {
+@RedisCommand("sunion")
+class SUnion extends AbstractRedisOperation {
+    SUnion(RedisBase base, List<Slice> params) {
         super(base, params);
     }
 
-    final Set<Slice> getIntersection() {
+    final Set<Slice> getUnion() {
         Slice key = params().get(0);
         RMSet setObj = getSetFromBaseOrCreateEmpty(key);
-        Set<Slice> result = new HashSet<>(setObj.getStoredData());
+        Set<Slice> resultSoFar = new HashSet<>(setObj.getStoredData());
 
         for(int i = 1; i < params().size(); i++){
             RMSet secondSetObj = getSetFromBaseOrCreateEmpty(params().get(i));
             Set<Slice> secondSet = secondSetObj.getStoredData();
-            result.retainAll(secondSet);
+            resultSoFar.addAll(secondSet);
         }
 
-        return result;
+        return resultSoFar;
     }
 
     @Override
     protected Slice response() {
-        return Response.array(getIntersection().stream().map(Response::bulkString).collect(toList()));
+        return Response.array(getUnion().stream().map(Response::bulkString).collect(toList()));
     }
 }

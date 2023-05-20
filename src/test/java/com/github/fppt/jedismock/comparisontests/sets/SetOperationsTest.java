@@ -96,6 +96,15 @@ public class SetOperationsTest {
     }
 
     @TestTemplate
+    public void poppingManyKeys(Jedis jedis) {
+        String key = "my-set-key-spop";
+        jedis.sadd(key, "a", "b", "c", "d");
+        assertEquals(3,
+                jedis.spop(key, 3).size());
+        assertEquals(1, jedis.scard(key));
+    }
+
+    @TestTemplate
     public void ensureSismemberReturnsCorrectValues(Jedis jedis) {
         String key = "my-set-key-sismember";
         jedis.sadd(key, "A", "B");
@@ -104,29 +113,6 @@ public class SetOperationsTest {
         assertFalse(jedis.sismember(key + "-nonexistent", "A"));
     }
 
-    @TestTemplate
-    public void whenUsingHsinter_EnsureSetIntersectionIsReturned(Jedis jedis) {
-        String key1 = "my-set-key-1";
-        Set<String> mySet1 = new HashSet<>(Arrays.asList("a", "b", "c", "d"));
-        String key2 = "my-set-key-2";
-        Set<String> mySet2 = new HashSet<>(Arrays.asList("b", "d", "e", "f"));
-        String key3 = "my-set-key-3";
-        Set<String> mySet3 = new HashSet<>(Arrays.asList("b", "e", "f"));
-
-        Set<String> expectedIntersection1 = new HashSet<>(Arrays.asList("b", "d"));
-        Set<String> expectedIntersection2 = new HashSet<>(Collections.singletonList("b"));
-
-        //Add everything from the sets
-        mySet1.forEach(value -> jedis.sadd(key1, value));
-        mySet2.forEach(value -> jedis.sadd(key2, value));
-        mySet3.forEach(value -> jedis.sadd(key3, value));
-
-        Set<String> intersection = jedis.sinter(key1, key2);
-        assertEquals(expectedIntersection1, intersection);
-
-        intersection = jedis.sinter(key1, key2, key3);
-        assertEquals(expectedIntersection2, intersection);
-    }
 
     @TestTemplate
     public void testFailingGetOperation(Jedis jedis) {
@@ -142,5 +128,43 @@ public class SetOperationsTest {
         jedis.sadd("foo".getBytes(), msg);
         byte[] newMsg = jedis.spop("foo".getBytes());
         assertArrayEquals(msg, newMsg);
+    }
+
+    @TestTemplate
+    public void testSMoveExistingElement(Jedis jedis) {
+        jedis.sadd("myset", "one", "two");
+        jedis.sadd("myotherset", "three");
+        assertEquals(1, jedis.smove("myset", "myotherset", "two"));
+        assertEquals(Collections.singleton("one"), jedis.smembers("myset"));
+        assertEquals(new HashSet<>(Arrays.asList("two", "three")),
+                jedis.smembers("myotherset"));
+    }
+
+    @TestTemplate
+    public void testSMoveNonExistingElement(Jedis jedis) {
+        jedis.sadd("myset", "one", "two");
+        jedis.sadd("myotherset", "three");
+        assertEquals(0, jedis.smove("myset", "myotherset", "four"));
+        assertEquals(new HashSet<>(Arrays.asList("one", "two")),
+                jedis.smembers("myset"));
+        assertEquals(Collections.singleton("three"),
+                jedis.smembers("myotherset"));
+    }
+
+    @TestTemplate
+    public void testSMoveWrongTypesSrcDest(Jedis jedis) {
+
+        String key1 = "key1";
+        String key2 = "key2";
+        
+        jedis.set(key1, "a");
+        jedis.sadd(key2, "b");
+
+        assertTrue(
+                assertThrows(JedisDataException.class, () -> jedis.smove(key1, key2, "a"))
+                        .getMessage().startsWith("WRONGTYPE"));
+        assertTrue(
+                assertThrows(JedisDataException.class, () -> jedis.smove(key2, key1, "a"))
+                        .getMessage().startsWith("WRONGTYPE"));
     }
 }

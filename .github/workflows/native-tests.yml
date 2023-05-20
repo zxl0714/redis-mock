@@ -28,7 +28,7 @@ jobs:
           restore-keys: ${{ runner.os }}-maven-
 
       - name: Fast build and install JedisMock
-        run: mvn -B install -Dmaven.javadoc.skip -DskipTests -Dspotbugs.skip=true -Dcheckstyle.skip=true
+        run: mvn -B install -Dmaven.javadoc.skip -DskipTests -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Dcpd.skip
 
       - name: Evaluate current JedisMock version
         run: |
@@ -56,4 +56,5 @@ jobs:
           ./runtest --host 127.0.0.1 --port 39807 --single unit/type/hash
           ./runtest --host 127.0.0.1 --port 39807 --single unit/type/list-2
           ./runtest --host 127.0.0.1 --port 39807 --single unit/type/list-3
+          ./runtest --host 127.0.0.1 --port 39807 --single unit/type/set
         working-directory: native_tests/linux

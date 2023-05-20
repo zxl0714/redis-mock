@@ -15,7 +15,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(ComparisonBase.class)
-public class TestSScan {
+public class SScanTest {
     private static final String key = "sscankey";
 
     @BeforeEach

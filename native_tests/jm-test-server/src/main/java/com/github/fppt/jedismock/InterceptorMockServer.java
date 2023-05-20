@@ -48,6 +48,9 @@ public final class InterceptorMockServer {
                         return Response.bulkString(
                                 Slice.create("DEBUG OBJECT command for this data structure is not yet supported")
                         );
+                    } else if ("debug".equalsIgnoreCase(roName)
+                            && "reload".equalsIgnoreCase(params.get(0).toString())) {
+                        return Response.OK;
                     } else if ("object".equalsIgnoreCase(roName)
                             && "encoding".equalsIgnoreCase(params.get(0).toString())
                     ) {
