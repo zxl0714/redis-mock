@@ -165,20 +165,20 @@
 
 :heavy_check_mark: sadd<br>
 :heavy_check_mark: scard<br>
-:x: sdiff<br>
-:x: sdiffstore<br>
+:heavy_check_mark: sdiff<br>
+:heavy_check_mark: sdiffstore<br>
 :heavy_check_mark: sinter<br>
-:x: sinterstore<br>
+:heavy_check_mark: sinterstore<br>
 :heavy_check_mark: sismember<br>
 :heavy_check_mark: smembers<br>
 :x: smismember<br>
-:x: smove<br>
+:heavy_check_mark: smove<br>
 :heavy_check_mark: spop<br>
 :heavy_check_mark: srandmember<br>
 :heavy_check_mark: srem<br>
 :heavy_check_mark: sscan<br>
-:x: sunion<br>
-:x: sunionstore<br>
+:heavy_check_mark: sunion<br>
+:heavy_check_mark: sunionstore<br>
 
 ## Sorted Sets
 
