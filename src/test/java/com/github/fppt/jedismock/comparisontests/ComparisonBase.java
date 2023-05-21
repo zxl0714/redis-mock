@@ -1,7 +1,16 @@
 package com.github.fppt.jedismock.comparisontests;
 
 import com.github.fppt.jedismock.RedisServer;
-import org.junit.jupiter.api.extension.*;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.Extension;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
+import org.junit.jupiter.api.extension.ParameterResolver;
+import org.junit.jupiter.api.extension.TestTemplateInvocationContext;
+import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
@@ -87,6 +96,12 @@ public class ComparisonBase implements TestTemplateInvocationContextProvider,
                 }
             }, (AfterEachCallback) context ->
             {
+                if (context.getExecutionException().isPresent() &&
+                        context.getExecutionException().get().getMessage().startsWith(TestErrorMessages.DEADLOCK_ERROR_MESSAGE)) {
+                    jedis.quit();
+                    jedis.close();
+                    return;
+                }
                 jedis.resetState();
                 jedis.quit();
                 jedis.close();

@@ -84,7 +84,7 @@
 :x: restore<br>
 :x: restore-asking<br>
 :heavy_check_mark: scan<br>
-:x: sort<br>
+:heavy_check_mark: sort<br>
 :x: substr<br>
 :x: touch<br>
 :heavy_check_mark: ttl<br>

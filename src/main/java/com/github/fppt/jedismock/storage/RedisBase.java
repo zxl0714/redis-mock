@@ -1,15 +1,15 @@
 package com.github.fppt.jedismock.storage;
 
 import com.github.fppt.jedismock.Utils;
-import com.github.fppt.jedismock.datastructures.RMHyperLogLog;
+import com.github.fppt.jedismock.datastructures.RMBitMap;
 import com.github.fppt.jedismock.datastructures.RMDataStructure;
+import com.github.fppt.jedismock.datastructures.RMHash;
+import com.github.fppt.jedismock.datastructures.RMHyperLogLog;
+import com.github.fppt.jedismock.datastructures.RMList;
 import com.github.fppt.jedismock.datastructures.RMSet;
 import com.github.fppt.jedismock.datastructures.RMString;
-import com.github.fppt.jedismock.datastructures.RMBitMap;
-import com.github.fppt.jedismock.datastructures.RMHash;
-import com.github.fppt.jedismock.datastructures.RMList;
-import com.github.fppt.jedismock.datastructures.Slice;
 import com.github.fppt.jedismock.datastructures.RMZSet;
+import com.github.fppt.jedismock.datastructures.Slice;
 import com.github.fppt.jedismock.server.RedisClient;
 
 import java.util.ArrayList;
@@ -298,6 +298,10 @@ public class RedisBase {
                 watchedKeys.remove(key);
             }
         }
+    }
+
+    public void markKeyModified(Slice key) {
+        watchedKeys.getOrDefault(key, new HashSet<>()).forEach(OperationExecutorState::watchedKeyIsAffected);
     }
 
     public String getCachedLuaScript(String sha1) {

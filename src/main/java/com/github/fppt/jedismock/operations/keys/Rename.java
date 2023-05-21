@@ -1,19 +1,22 @@
 package com.github.fppt.jedismock.operations.keys;
 
 import com.github.fppt.jedismock.datastructures.RMDataStructure;
+import com.github.fppt.jedismock.datastructures.Slice;
 import com.github.fppt.jedismock.operations.AbstractRedisOperation;
 import com.github.fppt.jedismock.operations.RedisCommand;
 import com.github.fppt.jedismock.server.Response;
-import com.github.fppt.jedismock.datastructures.Slice;
-import com.github.fppt.jedismock.storage.RedisBase;
+import com.github.fppt.jedismock.storage.OperationExecutorState;
 
 import java.util.List;
 
 @RedisCommand("rename")
 class Rename extends AbstractRedisOperation {
 
-    Rename(RedisBase base, List<Slice> params) {
-        super(base, params);
+    private final Object lock;
+
+    Rename(OperationExecutorState state, List<Slice> params) {
+        super(state.base(), params);
+        this.lock = state.lock();
     }
 
     private boolean rename(Slice key, Slice newKey) {
@@ -25,6 +28,8 @@ class Rename extends AbstractRedisOperation {
         base().deleteValue(newKey);
         base().putValue(newKey, value, ttl);
         base().deleteValue(key);
+        lock.notifyAll();
+
         return true;
     }
 

@@ -1,10 +1,10 @@
 package com.github.fppt.jedismock.operations.lists;
 
 import com.github.fppt.jedismock.datastructures.RMList;
+import com.github.fppt.jedismock.datastructures.Slice;
 import com.github.fppt.jedismock.operations.AbstractRedisOperation;
 import com.github.fppt.jedismock.operations.RedisCommand;
 import com.github.fppt.jedismock.server.Response;
-import com.github.fppt.jedismock.datastructures.Slice;
 import com.github.fppt.jedismock.storage.RedisBase;
 
 import java.util.ArrayList;
@@ -34,9 +34,6 @@ class LRange extends AbstractRedisOperation {
         }
         if (end < 0) {
             end = list.size() + end;
-            if (end < 0) {
-                end = 0;
-            }
         }
         List<Slice> result = new ArrayList<>();
         for (int i = start; i <= end && i < list.size(); i++) {

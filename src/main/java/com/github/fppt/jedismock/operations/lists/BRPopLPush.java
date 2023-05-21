@@ -1,35 +1,44 @@
 package com.github.fppt.jedismock.operations.lists;
 
-import com.github.fppt.jedismock.operations.RedisCommand;
-import com.github.fppt.jedismock.storage.OperationExecutorState;
-import com.github.fppt.jedismock.server.Response;
 import com.github.fppt.jedismock.datastructures.Slice;
+import com.github.fppt.jedismock.operations.RedisCommand;
+import com.github.fppt.jedismock.server.Response;
 import com.github.fppt.jedismock.server.SliceParser;
+import com.github.fppt.jedismock.storage.OperationExecutorState;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static com.github.fppt.jedismock.Utils.convertToLong;
+import static com.github.fppt.jedismock.Utils.convertToDouble;
 
 @RedisCommand("brpoplpush")
 class BRPopLPush extends RPopLPush {
     private long count = 0L;
     private final Object lock;
+    private final boolean isInTransaction;
 
     BRPopLPush(OperationExecutorState state, List<Slice> params) {
         super(state, params);
         this.lock = state.lock();
+        this.isInTransaction = state.isTransactionModeOn();
     }
 
-    protected void doOptionalWork(){
+    protected void doOptionalWork() {
         Slice source = params().get(0);
-        long timeout = convertToLong(params().get(2).toString());
-        long waitEnd = System.nanoTime() + timeout * 1_000_000_000L;
-        long waitTime;
+        long timeoutNanos = (long) (convertToDouble(params().get(2).toString()) * 1_000_000_000L);
+
+        if (timeoutNanos < 0) {
+            throw new IllegalArgumentException("ERR timeout is negative");
+        }
+
+        long waitEnd = System.nanoTime() + timeoutNanos;
+        long waitTimeNanos;
         count = getCount(source);
         try {
-            while (count == 0L && (waitTime = (waitEnd - System.nanoTime()) / 1_000_000L) > 0) {
-                lock.wait(waitTime);
+            while (count == 0L &&
+                    !isInTransaction &&
+                    (waitTimeNanos = timeoutNanos == 0 ? 0 : waitEnd - System.nanoTime()) >= 0) {
+                lock.wait(waitTimeNanos / 1_000_000, (int) waitTimeNanos % 1_000_000);
                 count = getCount(source);
             }
         } catch (InterruptedException e) {
@@ -39,14 +48,14 @@ class BRPopLPush extends RPopLPush {
     }
 
     protected Slice response() {
-        if(count != 0){
+        if (count != 0) {
             return super.response();
         } else {
             return Response.NULL;
         }
     }
 
-    private long getCount(Slice source){
+    private long getCount(Slice source) {
         Slice index = Slice.create("0");
         List<Slice> commands = Arrays.asList(source, index, index);
         Slice result = new LRange(base(), commands).execute();

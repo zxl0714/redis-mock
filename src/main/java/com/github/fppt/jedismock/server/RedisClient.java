@@ -1,6 +1,7 @@
 package com.github.fppt.jedismock.server;
 
 import com.github.fppt.jedismock.datastructures.Slice;
+import com.github.fppt.jedismock.exception.EOFException;
 import com.github.fppt.jedismock.storage.OperationExecutorState;
 import com.github.fppt.jedismock.storage.RedisBase;
 import com.github.fppt.jedismock.commands.RedisCommand;
@@ -71,6 +72,9 @@ public class RedisClient implements Runnable {
             return Optional.of(RedisCommandParser.parse(in));
         } catch (ParseErrorException e) {
             return Optional.empty(); // This simply means there is no next command
+        } catch (EOFException e) {
+            close();
+            return Optional.empty();
         }
     }
 

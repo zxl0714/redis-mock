@@ -35,11 +35,7 @@ public class SliceParser {
         long ret = 0;
         boolean hasLong = false;
         while (true) {
-            try {
-                c = consumeByte(messageInput);
-            } catch (EOFException e) {
-                throw new ParseErrorException();
-            }
+            c = consumeByte(messageInput);
             if (c == '\r') {
                 break;
             }
@@ -58,24 +54,16 @@ public class SliceParser {
     public static Slice consumeSlice(InputStream messageInput, long len) throws ParseErrorException {
         ByteArrayOutputStream bo = new ByteArrayOutputStream();
         for (long i = 0; i < len; i++) {
-            try {
-                bo.write(consumeByte(messageInput));
-            } catch (EOFException e) {
-                throw new ParseErrorException();
-            }
+            bo.write(consumeByte(messageInput));
         }
         return Slice.create(bo.toByteArray());
     }
 
     public static long consumeCount(InputStream messageInput) throws ParseErrorException {
-        try {
-            expectByte(messageInput, (byte) '*');
-            long count = consumeLong(messageInput);
-            expectByte(messageInput, (byte) '\n');
-            return count;
-        } catch (EOFException e) {
-            throw new ParseErrorException();
-        }
+        expectByte(messageInput, (byte) '*');
+        long count = consumeLong(messageInput);
+        expectByte(messageInput, (byte) '\n');
+        return count;
     }
 
     public static long consumeCount(byte[] message) throws ParseErrorException {
@@ -89,13 +77,9 @@ public class SliceParser {
     }
 
     public static int consumeInteger(InputStream messageInput) throws ParseErrorException {
-        try {
-            expectByte(messageInput, (byte) ':');
-            long count = consumeLong(messageInput);
-            return (int) count;
-        } catch (EOFException e) {
-            throw new ParseErrorException();
-        }
+        expectByte(messageInput, (byte) ':');
+        long count = consumeLong(messageInput);
+        return (int) count;
     }
 
     private static boolean isNumber(byte c) {
@@ -103,17 +87,13 @@ public class SliceParser {
     }
 
     public static Slice consumeParameter(InputStream messageInput) throws ParseErrorException {
-        try {
-            expectByte(messageInput, (byte) '$');
-            long len = consumeLong(messageInput);
-            expectByte(messageInput, (byte) '\n');
-            Slice para = consumeSlice(messageInput, len);
-            expectByte(messageInput, (byte) '\r');
-            expectByte(messageInput, (byte) '\n');
-            return para;
-        } catch (EOFException e) {
-            throw new ParseErrorException();
-        }
+        expectByte(messageInput, (byte) '$');
+        long len = consumeLong(messageInput);
+        expectByte(messageInput, (byte) '\n');
+        Slice para = consumeSlice(messageInput, len);
+        expectByte(messageInput, (byte) '\r');
+        expectByte(messageInput, (byte) '\n');
+        return para;
     }
 
     public static Slice consumeParameter(byte[] message) throws ParseErrorException {

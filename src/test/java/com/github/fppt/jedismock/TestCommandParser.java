@@ -55,7 +55,7 @@ public class TestCommandParser {
         try {
             SliceParser.consumeCount(stream);
             fail();
-        } catch (ParseErrorException e) {
+        } catch (EOFException e) {
             // OK
         }
     }
@@ -140,7 +140,7 @@ public class TestCommandParser {
         try {
             SliceParser.consumeLong(stream);
             fail();
-        } catch (ParseErrorException e) {
+        } catch (EOFException e) {
             // OK
         }
     }
@@ -151,7 +151,7 @@ public class TestCommandParser {
         try {
             SliceParser.consumeSlice(stream, 4);
             fail();
-        } catch (ParseErrorException e) {
+        } catch (EOFException e) {
             // OK
         }
     }
@@ -206,7 +206,7 @@ public class TestCommandParser {
         try {
             SliceParser.consumeParameter(stream);
             fail();
-        } catch (ParseErrorException e) {
+        } catch (EOFException e) {
             // OK
         }
     }
@@ -217,7 +217,7 @@ public class TestCommandParser {
         try {
             SliceParser.consumeParameter(stream);
             fail();
-        } catch (ParseErrorException e) {
+        } catch (EOFException e) {
             // OK
         }
     }

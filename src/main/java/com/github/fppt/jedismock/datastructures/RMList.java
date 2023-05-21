@@ -6,7 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RMList implements RMDataStructure {
-    private final List<Slice> storedData = new ArrayList<>();
+    private final List<Slice> storedData;
+
+    public RMList() {
+        this.storedData = new ArrayList<>();
+    }
+
+    public RMList(List<Slice> storedData) {
+        this.storedData = storedData;
+    }
 
     public List<Slice> getStoredData() {
         return storedData;

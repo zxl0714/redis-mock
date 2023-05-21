@@ -6,11 +6,14 @@ import com.github.fppt.jedismock.operations.RedisCommand;
 import com.github.fppt.jedismock.server.Response;
 import com.github.fppt.jedismock.storage.RedisBase;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RedisCommand("linsert")
 public class LInsert extends AbstractRedisOperation {
     private static final String BEFORE = "BEFORE";
+    private static final String AFTER = "AFTER";
+
     public LInsert(RedisBase base, List<Slice> params) {
         super(base, params);
     }
@@ -19,6 +22,11 @@ public class LInsert extends AbstractRedisOperation {
     protected Slice response() {
         Slice key = params().get(0);
         String direction = params().get(1).toString();
+
+        if (!Arrays.asList(BEFORE, AFTER).contains(direction.toUpperCase())) {
+            throw new IllegalArgumentException("ERR syntax error");
+        }
+
         Slice pivot = params().get(2);
         Slice element = params().get(3);
 

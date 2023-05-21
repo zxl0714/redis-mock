@@ -12,20 +12,26 @@ When used as a mock, it allows you to test behaviour dependent on Redis without 
 
 [List of currently supported operations](supported_operations.md).
 
-## Why, if we already have TestContainers?
-TestContainers is a great solution for integration tests with real services, including Redis.
-
-However, sometimes we want to use mock or proxy for some of our tests for the following reasons:
+## Why, if we have TestContainers?
+TestContainers is a great solution for integration tests with real services, including Redis. However, sometimes we want to use mock or proxy for some of our tests for the following reasons:
 
 * TestContainers require Docker. Jedis-Mock is just a Maven dependency which, when used as 'pure' mock, can be run on any machine, right now.
-* TestContainers tests can be slow and extremely resource-consuming. Jedis-Mock tests are lightning fast, which
+* TestContainers tests can be slow and resource-consuming. Jedis-Mock tests are lightning fast, which
 encourages developers to write more tests and run them more often.
 * Redis running in TestContainers is a "black box". We cannot verify what was actually called. 
   We cannot interfere with the reply. All this we can do with testing mock/proxy.
 * If you wish, you can use Jedis-Mock *together* with TestContainers, delegating command execution 
   to a real Redis instance, intercepting some of the calls when needed.
 
+## How can I ensure that this mock functions exactly like real Redis?
 
+First and foremost, it's important to acknowledge that no test mock can behave with absolute precision identical to a real system. Attempting to create a bug-to-bug compatible reimplementation would be impractical. The primary objective of a test mock is to expose errors in the code being tested. Therefore, it is acceptable for a mock to fail more frequently than a real system.
+
+In the case of Jedis-Mock, we make diligent efforts to preserve the semantics of Redis operations. We employ two practices to achieve this:
+
+1. Extensive use of comparison testing: All tests for Jedis-Mock are executed twice—once against the mock and once against a real Redis instance running in TestContainers. This approach ensures that our tests for Jedis-Mock include accurate assertions.
+
+2. Execution of native Redis tests: We continuously expand the suite of native Redis tests that are successfully executed against Jedis-Mock. These tests are the ones employed for regression testing of Redis itself. You can explore the specific tests being executed [here](.github/workflows/native-tests.yml).
 
 ## Quickstart 
 

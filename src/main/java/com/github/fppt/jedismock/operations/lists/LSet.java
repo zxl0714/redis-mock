@@ -21,6 +21,10 @@ public class LSet extends AbstractRedisOperation {
         int index = Utils.convertToInteger(params().get(1).toString());
         Slice element = params().get(2);
 
+        if (!base().exists(key)) {
+            throw new IllegalArgumentException("ERR no such key");
+        }
+
         List<Slice> storedData = base().getList(key).getStoredData();
 
         if (index < 0) {

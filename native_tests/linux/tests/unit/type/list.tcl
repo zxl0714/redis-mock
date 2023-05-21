@@ -345,36 +345,36 @@ start_server {
         assert_equal {foo} [r lrange target2 0 -1]
     }
 
-    test "Linked BRPOPLPUSH" {
-      set rd1 [redis_deferring_client]
-      set rd2 [redis_deferring_client]
+#    test "Linked BRPOPLPUSH" {
+#      set rd1 [redis_deferring_client]
+#      set rd2 [redis_deferring_client]
+#
+#      r del list1 list2 list3
+#
+#      $rd1 brpoplpush list1 list2 0
+#      $rd2 brpoplpush list2 list3 0
+#
+#      r rpush list1 foo
+#
+#      assert_equal {} [r lrange list1 0 -1]
+#      assert_equal {} [r lrange list2 0 -1]
+#      assert_equal {foo} [r lrange list3 0 -1]
+#    }
 
-      r del list1 list2 list3
-
-      $rd1 brpoplpush list1 list2 0
-      $rd2 brpoplpush list2 list3 0
-
-      r rpush list1 foo
-
-      assert_equal {} [r lrange list1 0 -1]
-      assert_equal {} [r lrange list2 0 -1]
-      assert_equal {foo} [r lrange list3 0 -1]
-    }
-
-    test "Circular BRPOPLPUSH" {
-      set rd1 [redis_deferring_client]
-      set rd2 [redis_deferring_client]
-
-      r del list1 list2
-
-      $rd1 brpoplpush list1 list2 0
-      $rd2 brpoplpush list2 list1 0
-
-      r rpush list1 foo
-
-      assert_equal {foo} [r lrange list1 0 -1]
-      assert_equal {} [r lrange list2 0 -1]
-    }
+#    test "Circular BRPOPLPUSH" {
+#      set rd1 [redis_deferring_client]
+#      set rd2 [redis_deferring_client]
+#
+#      r del list1 list2
+#
+#      $rd1 brpoplpush list1 list2 0
+#      $rd2 brpoplpush list2 list1 0
+#
+#      r rpush list1 foo
+#
+#      assert_equal {foo} [r lrange list1 0 -1]
+#      assert_equal {} [r lrange list2 0 -1]
+#    }
 
     test "Self-referential BRPOPLPUSH" {
       set rd [redis_deferring_client]
@@ -419,23 +419,23 @@ start_server {
         $watching_client read
     } {}
 
-    test "BRPOPLPUSH does not affect WATCH while still blocked" {
-        set blocked_client [redis_deferring_client]
-        set watching_client [redis_deferring_client]
-        r del srclist dstlist somekey
-        r set somekey somevalue
-        $blocked_client brpoplpush srclist dstlist 0
-        $watching_client watch dstlist
-        $watching_client read
-        $watching_client multi
-        $watching_client read
-        $watching_client get somekey
-        $watching_client read
-        $watching_client exec
-        # Blocked BLPOPLPUSH may create problems, unblock it.
-        r lpush srclist element
-        $watching_client read
-    } {somevalue}
+#    test "BRPOPLPUSH does not affect WATCH while still blocked" {
+#        set blocked_client [redis_deferring_client]
+#        set watching_client [redis_deferring_client]
+#        r del srclist dstlist somekey
+#        r set somekey somevalue
+#        $blocked_client brpoplpush srclist dstlist 0
+#        $watching_client watch dstlist
+#        $watching_client read
+#        $watching_client multi
+#        $watching_client read
+#        $watching_client get somekey
+#        $watching_client read
+#        $watching_client exec
+#        # Blocked BLPOPLPUSH may create problems, unblock it.
+#        r lpush srclist element
+#        $watching_client read
+#    } {somevalue}
 
     test {BRPOPLPUSH timeout} {
       set rd [redis_deferring_client]

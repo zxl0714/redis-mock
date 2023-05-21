@@ -1,5 +1,6 @@
 package com.github.fppt.jedismock.operations.lists;
 
+import com.github.fppt.jedismock.datastructures.RMList;
 import com.github.fppt.jedismock.datastructures.Slice;
 import com.github.fppt.jedismock.operations.AbstractRedisOperation;
 import com.github.fppt.jedismock.operations.RedisCommand;
@@ -23,6 +24,11 @@ class RPopLPush extends AbstractRedisOperation {
     protected Slice response() {
         Slice source = params().get(0);
         Slice target = params().get(1);
+
+        // check for target type before popping
+        if (base().exists(target) && !(base().getValue(target) instanceof RMList)) {
+            throw new IllegalArgumentException("WRONGTYPE Operation against a key holding the wrong kind of value");
+        }
 
         //Pop last one
         Slice result = new RPop(base(), Collections.singletonList(source)).execute();

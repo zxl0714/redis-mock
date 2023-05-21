@@ -12,6 +12,12 @@ jobs:
       - name: Install TCL
         run: sudo apt-get install -y tcl-tls
 
+      - name: Install wait4x
+        run: |
+          curl -#LO https://github.com/atkrad/wait4x/releases/latest/download/wait4x-linux-amd64.tar.gz
+          tar --one-top-level -xvf wait4x-linux-amd64.tar.gz
+          cp ./wait4x-linux-amd64/wait4x /usr/local/bin/wait4x
+
       - name: checkout
         uses: actions/checkout@v2
 
@@ -39,10 +45,6 @@ jobs:
         run: mvn -B verify -Djedismock.version=${{ env.jm_version }}
         working-directory: native_tests/jm-test-server
 
-      - name: Run jm-test-server in background
-        run: java -jar target/jm-test-server-1.0-SNAPSHOT-jar-with-dependencies.jar &
-        working-directory: native_tests/jm-test-server
-
       - name: Prepare TCL test run
         run: |
           sudo chmod +x ./gen-test-certs.sh
@@ -50,11 +52,24 @@ jobs:
           ./gen-test-certs.sh
         working-directory: native_tests/linux
 
-      - name: Run native tests
-        run: |
-          ./runtest --host 127.0.0.1 --port 39807 --single unit/type/incr
-          ./runtest --host 127.0.0.1 --port 39807 --single unit/type/hash
-          ./runtest --host 127.0.0.1 --port 39807 --single unit/type/list-2
-          ./runtest --host 127.0.0.1 --port 39807 --single unit/type/list-3
-          ./runtest --host 127.0.0.1 --port 39807 --single unit/type/set
-        working-directory: native_tests/linux
+      - name: chmod
+        run: chmod +x native_tests/testnative
+
+      - name: incr
+        run: ./testnative unit/type/incr
+        working-directory: native_tests
+
+      - name: hash
+        if: always()
+        run: ./testnative unit/type/hash
+        working-directory: native_tests
+
+      - name: list
+        if: always()
+        run: ./testnative unit/type/list-2 unit/type/list unit/type/list-3
+        working-directory: native_tests
+
+      - name: set
+        if: always()
+        run: ./testnative unit/type/set
+        working-directory: native_tests
