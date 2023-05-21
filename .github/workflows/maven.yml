@@ -28,14 +28,6 @@ jobs:
       - name: Build with Maven
         run: mvn -B -V verify -Dmaven.javadoc.skip
 
-      - name: Publish test report
-        uses: dorny/test-reporter@v1
-        if: (success() || failure()) && github.actor != 'dependabot[bot]'
-        with:
-          name: Test report
-          path: '**/surefire-reports/**/*.xml'
-          reporter: java-junit
-
       - name: Update list of supported operations
         if: success() && github.ref == 'refs/heads/master'
         uses: stefanzweifel/git-auto-commit-action@v4
