@@ -3,9 +3,11 @@ package com.github.fppt.jedismock.operations.scripting;
 import com.github.fppt.jedismock.datastructures.Slice;
 import com.github.fppt.jedismock.operations.CommandFactory;
 import com.github.fppt.jedismock.operations.RedisOperation;
+import com.github.fppt.jedismock.operations.connection.Select;
 import com.github.fppt.jedismock.storage.OperationExecutorState;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisNoScriptException;
 import redis.clients.jedis.util.RedisInputStream;
@@ -18,6 +20,8 @@ import java.util.List;
 import static com.github.fppt.jedismock.operations.scripting.Eval.embedLuaListToValue;
 
 public class LuaRedisCallback {
+
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(LuaRedisCallback.class);
     private static final String NOSCRIPT_PREFIX = "NOSCRIPT ";
 
     private final OperationExecutorState state;
@@ -25,6 +29,7 @@ public class LuaRedisCallback {
     public LuaRedisCallback(final OperationExecutorState state) {
         this.state = state;
     }
+
     public LuaValue call(LuaValue args) {
         String operationName = args.get(1).tojstring();
         List<Slice> a = new ArrayList<>();
@@ -33,7 +38,8 @@ public class LuaRedisCallback {
         }
         return execute(operationName, a);
     }
-    public LuaValue pcall(LuaValue args){
+
+    public LuaValue pcall(LuaValue args) {
         try {
             return call(args);
         } catch (final Exception e) {
@@ -43,8 +49,21 @@ public class LuaRedisCallback {
         }
     }
 
+    public String sha1hex(String x) {
+        return Script.getScriptSHA(x);
+    }
+
+    public void log(int level, String message) {
+        LOG.info("redis.log ({}, {})", level, message);
+    }
+
     private LuaValue execute(final String operationName, final List<Slice> args) {
-        final RedisOperation operation = CommandFactory.buildOperation(operationName.toLowerCase(), true, state, args);
+
+        final RedisOperation operation =
+                //Specific support for SELECT,
+                //see https://redis.io/docs/manual/programmability/lua-api/#using-selectcommandsselect-inside-scripts
+                "select".equalsIgnoreCase(operationName) ? new Select(state, args) :
+                        CommandFactory.buildOperation(operationName.toLowerCase(), true, state, args);
         if (operation != null) {
             throwOnUnsupported(operation);
             Slice result = operation.execute();

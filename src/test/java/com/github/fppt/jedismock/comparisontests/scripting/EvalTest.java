@@ -14,47 +14,47 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(ComparisonBase.class)
 public class EvalTest {
     @BeforeEach
-    public void setUp(Jedis jedis) {
+    void setUp(Jedis jedis) {
         jedis.flushAll();
     }
 
     @TestTemplate
-    public void evalTest(Jedis jedis) {
+    void evalTest(Jedis jedis) {
         Object eval_return = jedis.eval("return 'Hello, scripting!'", 0);
         assertEquals(String.class, eval_return.getClass());
         assertEquals("Hello, scripting!", eval_return);
     }
 
     @TestTemplate
-    public void evalParametrizedTest(Jedis jedis) {
+    void evalParametrizedTest(Jedis jedis) {
         Object eval_return = jedis.eval("return ARGV[1]", 0, "Hello");
         assertEquals(String.class, eval_return.getClass());
         assertEquals("Hello", eval_return);
     }
 
     @TestTemplate
-    public void evalIntTest(Jedis jedis) {
+    void evalIntTest(Jedis jedis) {
         Object eval_return = jedis.eval("return 0", 0);
         assertEquals(Long.class, eval_return.getClass());
         assertEquals(0L, eval_return);
     }
 
     @TestTemplate
-    public void evalLongTest(Jedis jedis) {
+    void evalLongTest(Jedis jedis) {
         Object eval_return = jedis.eval("return 1.123", 0);
         assertEquals(Long.class, eval_return.getClass());
         assertEquals(1L, eval_return);
     }
 
     @TestTemplate
-    public void evalTableOfStringsTest(Jedis jedis) {
+    void evalTableOfStringsTest(Jedis jedis) {
         Object eval_return = jedis.eval("return { 'test' }", 0);
         assertEquals(ArrayList.class, eval_return.getClass());
         assertEquals(Collections.singletonList("test"), eval_return);
     }
 
     @TestTemplate
-    public void evalTableOfLongTest(Jedis jedis) {
+    void evalTableOfLongTest(Jedis jedis) {
         Object eval_return = jedis.eval("return { 1, 2, 3 }", 0);
         assertEquals(ArrayList.class, eval_return.getClass());
         assertEquals(Long.class, ((List<?>) eval_return).get(0).getClass());
@@ -62,7 +62,7 @@ public class EvalTest {
     }
 
     @TestTemplate
-    public void evalDeepListTest(Jedis jedis) {
+    void evalDeepListTest(Jedis jedis) {
         Object eval_return = jedis.eval("return { 'test', 2, {'test', 2} }", 0);
         assertEquals(ArrayList.class, eval_return.getClass());
         assertEquals(String.class, ((List<?>) eval_return).get(0).getClass());
@@ -72,7 +72,7 @@ public class EvalTest {
     }
 
     @TestTemplate
-    public void evalDictTest(Jedis jedis) {
+    void evalDictTest(Jedis jedis) {
         Object eval_return = jedis.eval("return { a = 1, 2 }", 0);
         assertEquals(ArrayList.class, eval_return.getClass());
         assertEquals(Long.class, ((List<?>) eval_return).get(0).getClass());
@@ -80,7 +80,51 @@ public class EvalTest {
     }
 
     @TestTemplate
-    public void evalParametrizedReturnMultipleKeysArgsTest(Jedis jedis) {
+    void okFieldConversion(Jedis jedis) {
+        String script = "return {ok='fine'}";
+        assertEquals("fine", jedis.eval(script, 0));
+    }
+
+    @TestTemplate
+    void errFieldConversion(Jedis jedis) {
+        String script = "return {err='bad'}";
+        String message = assertThrows(JedisDataException.class,
+                () -> jedis.eval(script, 0)).getMessage();
+        assertEquals("bad", message);
+    }
+
+    @TestTemplate
+    void statusReplyAPI(Jedis jedis) {
+        String script = "return redis.status_reply('Everything is fine')";
+        assertEquals("Everything is fine", jedis.eval(script, 0));
+    }
+
+    @TestTemplate
+    void errorReplyAPI(Jedis jedis) {
+        String script = "return redis.error_reply('Something bad happened')";
+        String message = assertThrows(JedisDataException.class,
+                () -> jedis.eval(script, 0)).getMessage();
+        assertEquals("Something bad happened", message);
+    }
+
+    @TestTemplate
+    void logLevelsAPI(Jedis jedis) {
+        assertEquals(0L, jedis.eval("return redis.LOG_DEBUG"));
+        assertEquals(1L, jedis.eval("return redis.LOG_VERBOSE"));
+        assertEquals(2L, jedis.eval("return redis.LOG_NOTICE"));
+        assertEquals(3L, jedis.eval("return redis.LOG_WARNING"));
+    }
+
+    @TestTemplate
+    void logAPI(Jedis jedis) {
+        assertNull(jedis.eval("return redis.log(redis.LOG_DEBUG, 'Something is happening')"));
+        assertNull(jedis.eval("return redis.log(redis.LOG_VERBOSE, 'Blah-blah')"));
+        assertNull(jedis.eval("return redis.log(redis.LOG_NOTICE, 'Notice this')"));
+        assertNull(jedis.eval("return redis.log(redis.LOG_WARNING, 'Something is wrong')"));
+    }
+
+    @TestTemplate
+    void evalParametrizedReturnMultipleKeysArgsTest(Jedis jedis) {
         Object eval_return = jedis.eval(
                 "return { KEYS[1], KEYS[2], ARGV[1], ARGV[2], ARGV[3] }",
                 2, "key1", "key2",
@@ -91,7 +135,7 @@ public class EvalTest {
     }
 
     @TestTemplate
-    public void evalParametrizedReturnMultipleKeysArgsNumbersTest(Jedis jedis) {
+    void evalParametrizedReturnMultipleKeysArgsNumbersTest(Jedis jedis) {
         Object eval_return = jedis.eval(
                 "return { KEYS[1], KEYS[2], tonumber(ARGV[1]) }",
                 2, "key1", "key2",
@@ -102,30 +146,31 @@ public class EvalTest {
     }
 
     @TestTemplate
-    public void evalRedisSetTest(Jedis jedis) {
+    void evalRedisSetTest(Jedis jedis) {
         assertEquals("OK", jedis.eval("return redis.call('SET', 'test', 'hello')", 0));
+        assertEquals("hello", jedis.get("test"));
     }
 
     @TestTemplate
-    public void evalRedisDecrTest(Jedis jedis) {
+    void evalRedisDecrTest(Jedis jedis) {
         jedis.eval("redis.call('SET', 'count', '1')", 0);
         assertEquals(0L, jedis.eval("return redis.call('DECR', 'count')", 0));
     }
 
     @TestTemplate
-    public void evalRedisRecursiveTest(Jedis jedis) {
+    void evalRedisRecursiveTest(Jedis jedis) {
         Exception e = assertThrows(RuntimeException.class, () -> jedis.eval("return redis.call('EVAL', 'return { 1, 2, 3 }', '0')", 0));
         assertNotNull(e);
     }
 
     @TestTemplate
-    public void evalRedisReturnPcallResultsInExceptionTest(Jedis jedis) {
+    void evalRedisReturnPcallResultsInExceptionTest(Jedis jedis) {
         JedisDataException e = assertThrows(JedisDataException.class, () -> jedis.eval("return redis.pcall('RENAME','A','B')", 0));
         assertNotNull(e);
     }
 
     @TestTemplate
-    public void evalRedisPCallCanHandleExceptionTest(Jedis jedis) {
+    void evalRedisPCallCanHandleExceptionTest(Jedis jedis) {
         assertEquals("Handled error from pcall", jedis.eval("" +
                         "local reply = redis.pcall('RENAME','A','B')\n" +
                         "if reply['err'] ~= nil then\n" +
@@ -136,29 +181,75 @@ public class EvalTest {
     }
 
     @TestTemplate
-    public void evalRedisPCallDoesNotThrowTest(Jedis jedis) {
+    void evalRedisPCallDoesNotThrowTest(Jedis jedis) {
         assertNull(jedis.eval("redis.pcall('RENAME','A','B')", 0));
     }
 
     @TestTemplate
-    public void fibonacciScript(Jedis jedis) {
+    void fibonacciScript(Jedis jedis) {
         String script =
                 "local a, b = 0, 1\n" +
-                "for i = 2, ARGV[1] do\n" +
-                "  local temp = a + b\n" +
-                "  a = b\n" +
-                "  b = temp\n" +
-                "  redis.call('RPUSH',KEYS[1], temp)\n" +
-                "end\n" ;
+                        "for i = 2, ARGV[1] do\n" +
+                        "  local temp = a + b\n" +
+                        "  a = b\n" +
+                        "  b = temp\n" +
+                        "  redis.call('RPUSH',KEYS[1], temp)\n" +
+                        "end\n";
         jedis.eval(script, 1, "mylist", "10");
         assertEquals(Arrays.asList("1", "2", "3", "5", "8", "13", "21", "34", "55"),
                 jedis.lrange("mylist", 0, -1));
     }
 
     @TestTemplate
-    public void manyArgumentsTest(Jedis jedis) {
-        String script = "return redis.call('SADD', 'myset', 1, 2, 3, 4, 5, 6)" ;
+    void trailingComment(Jedis jedis) {
+        assertEquals("hello", jedis.eval("return 'hello' --trailing comment", 0));
+    }
+
+    @TestTemplate
+    void manyArgumentsTest(Jedis jedis) {
+        String script = "return redis.call('SADD', 'myset', 1, 2, 3, 4, 5, 6)";
         jedis.eval(script, 0);
         assertEquals(6, jedis.scard("myset"));
     }
+
+    @TestTemplate
+    void booleanTrueConversion(Jedis jedis) {
+        String script = "return true";
+        assertEquals(1L, jedis.eval(script, 0));
+    }
+
+    @TestTemplate
+    void booleanFalseConversion(Jedis jedis) {
+        String script = "return false";
+        assertNull(jedis.eval(script, 0));
+    }
+
+    @TestTemplate
+    void sha1hexImplementation(Jedis jedis) {
+        String script = "return redis.sha1hex('Pizza & Mandolino')";
+        assertEquals("74822d82031af7493c20eefa13bd07ec4fada82f",
+                jedis.eval(script, 0));
+    }
+
+    @TestTemplate
+    void selectUsesSelectedDB(Jedis jedis) {
+        jedis.select(5);
+        jedis.set("foo", "DB5");
+        jedis.select(6);
+        jedis.set("foo", "DB6");
+        jedis.select(5);
+        assertEquals("DB5", jedis.eval("return redis.call('get', 'foo')"));
+    }
+
+    @TestTemplate
+    void luaSelectDoesNotAffectSelectedDB(Jedis jedis) {
+        jedis.select(5);
+        jedis.set("foo", "DB5");
+        jedis.select(6);
+        jedis.set("foo", "DB6");
+        assertEquals("DB5", jedis.eval("redis.call('select', 5); return redis.call('get', 'foo')"));
+        assertEquals("DB6", jedis.get("foo"));
+    }
+
+
 }

@@ -93,4 +93,8 @@ public class OperationExecutorState {
         }
         watchedKeysAffected = false;
     }
+
+    public int getSelected() {
+        return selectedRedisBase;
+    }
 }
