@@ -5,7 +5,6 @@ import com.github.fppt.jedismock.datastructures.Slice;
 import com.github.fppt.jedismock.operations.RedisCommand;
 import com.github.fppt.jedismock.storage.RedisBase;
 
-import java.util.Collections;
 import java.util.List;
 
 @RedisCommand("zrevrangebylex")
@@ -17,9 +16,7 @@ class ZRevRangeByLex extends ZRangeByLex {
 
     @Override
     protected List<Slice> doProcess(RMZSet map, String start, String end, double score) {
-        final List<Slice> list = super.doProcess(map, start, end, score);
-        Collections.reverse(list);
-        return list;
+        return process(map, start, end, score, true);
     }
 
     @Override
