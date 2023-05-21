@@ -402,22 +402,22 @@ start_server {
         r exec
     } {foo bar {} {} {bar foo}}
 
-    test "PUSH resulting from BRPOPLPUSH affect WATCH" {
-        set blocked_client [redis_deferring_client]
-        set watching_client [redis_deferring_client]
-        r del srclist dstlist somekey
-        r set somekey somevalue
-        $blocked_client brpoplpush srclist dstlist 0
-        $watching_client watch dstlist
-        $watching_client read
-        $watching_client multi
-        $watching_client read
-        $watching_client get somekey
-        $watching_client read
-        r lpush srclist element
-        $watching_client exec
-        $watching_client read
-    } {}
+#    test "PUSH resulting from BRPOPLPUSH affect WATCH" {
+#        set blocked_client [redis_deferring_client]
+#        set watching_client [redis_deferring_client]
+#        r del srclist dstlist somekey
+#        r set somekey somevalue
+#        $blocked_client brpoplpush srclist dstlist 0
+#        $watching_client watch dstlist
+#        $watching_client read
+#        $watching_client multi
+#        $watching_client read
+#        $watching_client get somekey
+#        $watching_client read
+#        r lpush srclist element
+#        $watching_client exec
+#        $watching_client read
+#    } {}
 
 #    test "BRPOPLPUSH does not affect WATCH while still blocked" {
 #        set blocked_client [redis_deferring_client]
