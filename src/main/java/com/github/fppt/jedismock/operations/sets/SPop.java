@@ -39,12 +39,15 @@ class SPop extends AbstractRedisOperation {
 
         final RMSet setDBObj = getSetFromBaseOrCreateEmpty(key);
         Set<Slice> data = setDBObj.getStoredData();
-        if (data == null || data.isEmpty()) return Response.NULL;
+        if (data.isEmpty()) return
+                params().size() > 1 ?
+                        Response.EMPTY_ARRAY :
+                        Response.NULL;
         List<Slice> v = popper(data, number);
-        if (v.size() == 1) {
-            return v.get(0);
-        } else {
+        if (params().size() > 1) {
             return Response.array(v);
+        } else {
+            return v.get(0);
         }
     }
 }

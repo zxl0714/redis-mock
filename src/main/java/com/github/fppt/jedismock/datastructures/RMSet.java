@@ -3,6 +3,7 @@ package com.github.fppt.jedismock.datastructures;
 import com.github.fppt.jedismock.exception.WrongValueTypeException;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class RMSet implements RMDataStructure {
@@ -17,6 +18,7 @@ public class RMSet implements RMDataStructure {
     }
 
     public RMSet(Set<Slice> data) {
+        Objects.requireNonNull(data);
         storedData = data;
     }
 
