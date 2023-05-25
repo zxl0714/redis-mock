@@ -105,6 +105,21 @@ public class SetOperationsTest {
     }
 
     @TestTemplate
+    public void poppingZeroAndOneKey(Jedis jedis) {
+        String key = "key-pop";
+        jedis.sadd(key, "a");
+        assertEquals(1, jedis.spop(key, 1).size());
+        assertEquals(0, jedis.spop(key, 0).size());
+    }
+
+    @TestTemplate
+    public void poppingNonExistentSet(Jedis jedis) {
+        String key = "non-existent";
+        assertTrue(jedis.spop(key, 1).isEmpty());
+        assertNull(jedis.spop(key));
+    }
+
+    @TestTemplate
     public void ensureSismemberReturnsCorrectValues(Jedis jedis) {
         String key = "my-set-key-sismember";
         jedis.sadd(key, "A", "B");
