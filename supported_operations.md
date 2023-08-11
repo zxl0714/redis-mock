@@ -4,7 +4,7 @@
 
 :heavy_check_mark: auth<br>
 :heavy_check_mark: client<br>
-:x: echo<br>
+:heavy_check_mark: echo<br>
 :heavy_check_mark: hello<br>
 :heavy_check_mark: ping<br>
 :heavy_check_mark: quit<br>
