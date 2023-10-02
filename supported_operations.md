@@ -243,7 +243,7 @@
 :heavy_check_mark: decrby<br>
 :heavy_check_mark: get<br>
 :heavy_check_mark: getbit<br>
-:x: getdel<br>
+:heavy_check_mark: getdel<br>
 :x: getex<br>
 :x: getrange<br>
 :heavy_check_mark: getset<br>
