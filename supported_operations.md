@@ -1,5 +1,16 @@
 # Supported operations:
 
+## Connection
+
+:heavy_check_mark: auth<br>
+:heavy_check_mark: client<br>
+:heavy_check_mark: echo<br>
+:heavy_check_mark: hello<br>
+:heavy_check_mark: ping<br>
+:heavy_check_mark: quit<br>
+:x: reset<br>
+:heavy_check_mark: select<br>
+
 ## Cluster
 
 :heavy_check_mark: cluster<br>
