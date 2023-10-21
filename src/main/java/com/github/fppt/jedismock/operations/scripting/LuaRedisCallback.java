@@ -4,7 +4,9 @@ import com.github.fppt.jedismock.datastructures.Slice;
 import com.github.fppt.jedismock.operations.CommandFactory;
 import com.github.fppt.jedismock.operations.RedisOperation;
 import com.github.fppt.jedismock.operations.connection.Select;
+import com.github.fppt.jedismock.server.Response;
 import com.github.fppt.jedismock.storage.OperationExecutorState;
+import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.slf4j.LoggerFactory;
@@ -34,7 +36,12 @@ public class LuaRedisCallback {
         String operationName = args.get(1).tojstring();
         List<Slice> a = new ArrayList<>();
         for (int i = 2; i <= args.length(); i++) {
-            a.add(Slice.create(args.get(i).tojstring()));
+            LuaValue arg = args.get(i);
+            if (arg instanceof LuaString) {
+                a.add(Slice.create(((LuaString) arg).m_bytes));
+            } else {
+                a.add(Slice.create(args.get(i).tojstring()));
+            }
         }
         return execute(operationName, a);
     }
@@ -67,7 +74,7 @@ public class LuaRedisCallback {
         if (operation != null) {
             throwOnUnsupported(operation);
             Slice result = operation.execute();
-            if (result == null) {
+            if (Response.NULL.equals(result)) {
                 return LuaValue.NONE;
             } else {
                 byte[] data = result.data();
