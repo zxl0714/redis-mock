@@ -7,9 +7,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisDataException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(ComparisonBase.class)
 public class EvalTest {
@@ -171,7 +177,7 @@ public class EvalTest {
 
     @TestTemplate
     void evalRedisPCallCanHandleExceptionTest(Jedis jedis) {
-        assertEquals("Handled error from pcall", jedis.eval("" +
+        assertEquals("Handled error from pcall", jedis.eval(
                         "local reply = redis.pcall('RENAME','A','B')\n" +
                         "if reply['err'] ~= nil then\n" +
                         "  return 'Handled error from pcall'" +
@@ -251,5 +257,20 @@ public class EvalTest {
         assertEquals("DB6", jedis.get("foo"));
     }
 
+    @TestTemplate
+    public void luaReturnsNullFromEmptyMap(Jedis jedis) {
+        String s = "return redis.call('hget', KEYS[1], ARGV[1])";
+        Object res = jedis.eval(s, Collections.singletonList("foo"),
+                Collections.singletonList("bar"));
+        assertNull(res);
+    }
+
+    @TestTemplate
+    public void luaReturnsNullFromNonExistentKey(Jedis jedis) {
+        String s = "return redis.call('get', KEYS[1])";
+        Object res = jedis.eval(s, Collections.singletonList("foo"),
+                Collections.emptyList());
+        assertNull(res);
+    }
 
 }
