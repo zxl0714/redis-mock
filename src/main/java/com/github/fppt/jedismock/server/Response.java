@@ -1,0 +1,175 @@
+package com.github.fppt.jedismock.server;
+
+import com.github.fppt.jedismock.datastructures.Slice;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by Xiaolu on 2015/4/20.
+ */
+public class Response {
+    public static final String LINE_SEPARATOR = "\r\n";
+
+    public static final Slice OK = Slice.create("+OK" + LINE_SEPARATOR);
+    public static final Slice QUEUED = Slice.create("+QUEUED" + LINE_SEPARATOR);
+    public static final Slice NULL = Slice.create("$-1" + LINE_SEPARATOR);
+    public static final Slice SKIP = Slice.create("Skip this submission");
+    public static final Slice EMPTY_ARRAY = Response.array();
+    public static final Slice NULL_ARRAY = Slice.create("*-1" + LINE_SEPARATOR);
+
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Response.class);
+
+    private Response() {
+    }
+
+    public static Slice bulkString(Slice slice) {
+        if (slice == null) {
+            return NULL;
+        }
+
+        ByteArrayOutputStream bo = new ByteArrayOutputStream();
+
+        try {
+            bo.write(String.format("$%d%s", slice.length(), LINE_SEPARATOR).getBytes());
+            bo.write(slice.data());
+            bo.write(LINE_SEPARATOR.getBytes());
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        return Slice.create(bo.toByteArray());
+    }
+
+    public static Slice error(String s) {
+        return Slice.create(String.format("-%s%s", sanitize(s), LINE_SEPARATOR));
+    }
+
+    public static Slice simpleString(String s) {
+        return Slice.create(String.format("+%s%s", sanitize(s), LINE_SEPARATOR));
+    }
+
+    public static Slice integer(long v) {
+        return Slice.create(String.format(":%d%s", v, LINE_SEPARATOR));
+    }
+
+    public static Slice doubleValue(double v) {
+        return Slice.create(String.format(":%.0f%s", v, LINE_SEPARATOR));
+    }
+
+    public static Slice array(Slice... values) {
+        ByteArrayOutputStream bo = new ByteArrayOutputStream();
+        try {
+            bo.write(String.format("*%d%s", values.length, LINE_SEPARATOR).getBytes());
+            for (Slice value : values) {
+                bo.write(value.data());
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        return Slice.create(bo.toByteArray());
+    }
+
+    public static Slice array(List<Slice> values) {
+        ByteArrayOutputStream bo = new ByteArrayOutputStream();
+        try {
+            bo.write(String.format("*%d%s", values.size(), LINE_SEPARATOR).getBytes());
+            for (Slice value : values) {
+                bo.write(value.data());
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        return Slice.create(bo.toByteArray());
+    }
+
+    public static Slice publishedMessage(Slice channel, Slice message) {
+        Slice operation = SliceParser.consumeParameter("$7\r\nmessage\r\n".getBytes());
+
+        List<Slice> slices = new ArrayList<>();
+        slices.add(Response.bulkString(operation));
+        slices.add(Response.bulkString(channel));
+        slices.add(Response.bulkString(message));
+
+        return array(slices);
+    }
+
+    public static Slice publishedPMessage(Slice pattern, Slice channel, Slice message) {
+        Slice operation = SliceParser.consumeParameter("$8\r\npmessage\r\n".getBytes());
+
+        List<Slice> slices = new ArrayList<>();
+        slices.add(Response.bulkString(operation));
+        slices.add(Response.bulkString(pattern));
+        slices.add(Response.bulkString(channel));
+        slices.add(Response.bulkString(message));
+
+        return array(slices);
+    }
+
+    public static Slice subscribedToChannel(Slice channel, int subscriptionsCount) {
+        return array(
+                bulkString(Slice.create("subscribe")),
+                bulkString(channel),
+                integer(subscriptionsCount));
+    }
+
+    public static Slice psubscribedToPattern(Slice pattern, int subscriptionsCount) {
+        return array(
+                bulkString(Slice.create("psubscribe")),
+                bulkString(pattern),
+                integer(subscriptionsCount));
+    }
+
+    /**
+     * The reply to PING issued by a client in subscribe mode (RESP2): a
+     * two-element array of "pong" and the PING argument or an empty string.
+     */
+    public static Slice pongInSubscribeMode(Slice message) {
+        return array(
+                bulkString(Slice.create("pong")),
+                bulkString(message == null ? Slice.create("") : message));
+    }
+
+    public static Slice unsubscribe(Slice channel, int remainingSubscriptions) {
+        Slice operation = SliceParser.consumeParameter("$11\r\nunsubscribe\r\n".getBytes());
+
+        List<Slice> slices = new ArrayList<>();
+        slices.add(Response.bulkString(operation));
+        slices.add(Response.bulkString(channel));
+        slices.add(Response.integer(remainingSubscriptions));
+
+        return array(slices);
+    }
+
+    public static Slice punsubscribe(Slice channel, int remainingSubscriptions) {
+        Slice operation = SliceParser.consumeParameter("$12\r\npunsubscribe\r\n".getBytes());
+
+        List<Slice> slices = new ArrayList<>();
+        slices.add(Response.bulkString(operation));
+        slices.add(Response.bulkString(channel));
+        slices.add(Response.integer(remainingSubscriptions));
+
+        return array(slices);
+    }
+
+    public static Slice clientResponse(String command, Slice response) {
+        if (LOG.isDebugEnabled() && !response.equals(SKIP)) {
+            LOG.debug("Received command [{}] sending reply [{}]", command, sanitize(response.toString()));
+        }
+        return response;
+    }
+
+    /**
+     * Null-safe string sanitizer.
+     */
+    private static String sanitize(String s) {
+        /*
+        A reply is a single line terminated by CRLF; an embedded
+        CR or LF (e.g. a Lua stack traceback) would break framing for strict
+        clients, so collapse them to spaces.
+         */
+        return String.valueOf(s).replace('\r', ' ').replace('\n', ' ');
+    }
+}

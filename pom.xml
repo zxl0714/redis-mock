@@ -1,23 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.zxl0714</groupId>
-    <artifactId>redis-mock</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>9</version>
+    </parent>
 
-    <name>redis-mock</name>
-    <description>A simple redis java mock for unit testing.</description>
-    <url>https://github.com/zxl0714/redis-mock</url>
-
-    <scm>
-        <connection>scm:git:https://github.com/zxl0714/redis-mock.git</connection>
-        <url>scm:git:https://github.com/zxl0714/redis-mock.git</url>
-        <developerConnection>scm:git:https://github.com/zxl0714/redis-mock.git</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
+    <groupId>com.github.fppt</groupId>
+    <artifactId>jedis-mock</artifactId>
+    <version>1.1.21-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>jedis-mock</name>
+    <description>In memory Redis mock for testing</description>
+    <url>https://github.com/fppt/jedis-mock</url>
+    <prerequisites>
+        <maven>3.0.0</maven>
+    </prerequisites>
 
     <developers>
+        <developer>
+            <id>fppt</id>
+            <name>Filipe Peliz Pinto Teixeira</name>
+            <email>fppintoteixeira@gmail.com</email>
+        </developer>
+        <developer>
+            <id>inponomarev</id>
+            <name>Ivan Ponomarev</name>
+            <email>iponomarev@curs.ru</email>
+        </developer>
+        <!-- Original developer of library no longer maintaining project (Kudos To You Sir!!)-->
         <developer>
             <id>zxl0714</id>
             <name>zxl0714</name>
@@ -27,14 +41,30 @@
 
     <licenses>
         <license>
-            <name>MIT License</name>
-            <url>http://www.opensource.org/licenses/mit-license.php</url>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
         </license>
     </licenses>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <junit.version>6.1.3</junit.version>
+        <assertj.version>3.27.7</assertj.version>
+        <jedis.version>8.0.2</jedis.version>
+        <testcontainers.version>1.21.4</testcontainers.version>
+        <spotbugs.version>4.10.5.0</spotbugs.version>
+        <slf4j.version>2.0.20</slf4j.version>
+        <java.version>1.8</java.version>
+        <maven.enforcer.plugin.version>3.6.3</maven.enforcer.plugin.version>
+        <archunit.version>1.5.1</archunit.version>
+        <javapoet.version>0.22.0</javapoet.version>
+        <processor.package>com/github/fppt/jedismock/processor/*.java</processor.package>
+        <processor.classes>${project.build.directory}/processor-classes</processor.classes>
+        <processor.lib>${project.build.directory}/processor-lib</processor.lib>
+        <processor.generated>${project.build.directory}/processor-generated</processor.generated>
+        <javapoet.jar>${processor.lib}/javapoet.jar</javapoet.jar>
     </properties>
 
     <distributionManagement>
@@ -49,26 +79,99 @@
     </distributionManagement>
 
     <dependencies>
+        <!-- transitive dependencies -->
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>18.0</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <version>3.0.0</version>
+            <groupId>org.luaj</groupId>
+            <artifactId>luaj-jse</artifactId>
+            <version>3.0.1</version>
         </dependency>
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>2.6.3</version>
+            <version>${jedis.version}</version>
+        </dependency>
+
+        <!-- build-only dependency -->
+        <dependency>
+            <groupId>com.palantir.javapoet</groupId>
+            <artifactId>javapoet</artifactId>
+            <version>${javapoet.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- test dependencies -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.2.19.Final</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+            <version>7.9.0.RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.20</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Used for creating an testcontainer of Redis for testing and comparing behaviour-->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.24.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>nl.jqno.equalsverifier</groupId>
+            <artifactId>equalsverifier</artifactId>
+            <version>4.5.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>4.8.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Plain archunit rather than archunit-junit5: the latter contributes its own
+             JUnit engine, and the rules read fine from ordinary @Test methods. -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit</artifactId>
+            <version>${archunit.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -76,10 +179,54 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${maven.enforcer.plugin.version}</version>
+
+                <executions>
+                    <execution>
+                        <id>enforce</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>[3.8.6,)</version>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>[21,)</version>
+                                </requireJavaVersion>
+                                <!-- enforceBytecodeVersion is a core rule since enforcer 3.6.3; do not add
+                                     extra-enforcer-rules here, it registers a rule under the same name and
+                                     which one wins differs between builds (e.g. CLI vs IntelliJ). -->
+                                <enforceBytecodeVersion>
+                                    <maxJdkVersion>8</maxJdkVersion>
+                                    <searchTransitive>true</searchTransitive>
+                                    <ignoredScopes>
+                                        <ignoredScope>test</ignoredScope>
+                                        <!-- JavaPoet targets Java 17 bytecode but is only used at build time by
+                                             the annotation processor. Scope-based, because the core rule's
+                                             <excludes> is inverted in 3.6.3: it scans only what it lists. -->
+                                        <ignoredScope>provided</ignoredScope>
+                                    </ignoredScopes>
+                                </enforceBytecodeVersion>
+                                <!-- Released library must not depend on SNAPSHOT artifacts -->
+                                <requireReleaseDeps/>
+                                <!-- No duplicate <dependency> entries in this POM -->
+                                <banDuplicatePomDependencyVersions/>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <inherited>true</inherited>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
+                <version>3.4.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -91,17 +238,98 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.11.0</version>
+                <executions>
+                    <execution>
+                        <id>stage-processor-path</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.palantir.javapoet</groupId>
+                                    <artifactId>javapoet</artifactId>
+                                    <version>${javapoet.version}</version>
+                                    <destFileName>javapoet.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${processor.lib}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
+                <version>3.16.0</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <release>8</release>
+                    <testRelease>17</testRelease>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>compile-command-registry-processor</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>${processor.package}</include>
+                            </includes>
+                            <outputDirectory>${processor.classes}</outputDirectory>
+                            <!-- Must not share the default generated-sources/annotations with
+                                 default-compile: when the compiler plugin decides to recompile this
+                                 execution it wipes its generatedSourcesDirectory first, which would
+                                 delete the registry generated by default-compile (e.g. when the IDE
+                                 runs only the early phases via "Generate Sources"). -->
+                            <generatedSourcesDirectory>${processor.generated}</generatedSourcesDirectory>
+                            <release>17</release>
+                            <proc>none</proc>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>default-compile</id>
+                        <configuration>
+                            <excludes>
+                                <exclude>${processor.package}</exclude>
+                            </excludes>
+                            <annotationProcessors>
+                                <annotationProcessor>
+                                    com.github.fppt.jedismock.processor.CommandRegistryProcessor
+                                </annotationProcessor>
+                            </annotationProcessors>
+                            <compilerArgs>
+                                <arg>-processorpath</arg>
+                                <arg>${processor.classes}${path.separator}${javapoet.jar}</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>default-testCompile</id>
+                        <configuration>
+                            <!-- Not needed by Maven (no services file, so javac discovers nothing here).
+                                 It is for IntelliJ: its importer reads annotation-processor settings from
+                                 the compile phase only and applies that profile to the test module as
+                                 well, but takes javac arguments per execution. Without this path the IDE
+                                 looks for the named processor on the test classpath, where it is
+                                 deliberately absent, and stops the build. The processor emits nothing
+                                 when it finds no annotated class, so running it over tests is a no-op. -->
+                            <compilerArgs>
+                                <arg>-processorpath</arg>
+                                <arg>${processor.classes}${path.separator}${javapoet.jar}</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.15</version>
+                <version>3.6.0</version>
                 <configuration>
                     <useFile>true</useFile>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
@@ -110,7 +338,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>2.5</version>
+                <version>3.3.1</version>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <useReleaseProfile>false</useReleaseProfile>
@@ -121,7 +349,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
+                <version>3.12.0</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -130,32 +358,96 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <tags>
+                        <tag>
+                            <name>asymptotic</name>
+                            <placement>a</placement>
+                            <head>Asymptotic:</head>
+                        </tag>
+                    </tags>
+                </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.5</version>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>${spotbugs.version}</version>
+                <configuration>
+                    <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
+                    <effort>Max</effort>
+                    <threshold>Low</threshold>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>sign-artifacts</id>
+                        <id>check</id>
                         <phase>verify</phase>
                         <goals>
-                            <goal>sign</goal>
+                            <goal>check</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.3</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <configuration>
+                            <configLocation>checkstyle.xml</configLocation>
+                            <consoleOutput>true</consoleOutput>
+                            <failsOnError>true</failsOnError>
+                        </configuration>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>14.3.0</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.12.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>validated</waitUntil>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.8</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

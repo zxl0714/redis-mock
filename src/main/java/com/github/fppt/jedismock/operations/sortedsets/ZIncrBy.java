@@ -1,0 +1,40 @@
+package com.github.fppt.jedismock.operations.sortedsets;
+
+import com.github.fppt.jedismock.datastructures.RMZSet;
+import com.github.fppt.jedismock.datastructures.Slice;
+import com.github.fppt.jedismock.operations.RedisCommand;
+import com.github.fppt.jedismock.server.Response;
+import com.github.fppt.jedismock.storage.KeyspaceEvent;
+import com.github.fppt.jedismock.storage.RedisBase;
+
+import java.util.List;
+
+@RedisCommand(value = "zincrby", arity = 4, readOnly = false)
+public class ZIncrBy extends AbstractByScoreOperation {
+    public ZIncrBy(RedisBase base, List<Slice> params) {
+        super(base, params);
+    }
+
+    @Override
+    protected Slice response() {
+        return Response.bulkString(Slice.create(String.valueOf(getNewScore())));
+    }
+
+    protected double getNewScore() {
+        Slice key = params().get(0);
+        String increment = params().get(1).toString();
+        Slice member = params().get(2);
+        final RMZSet mapDBObj = getZSetFromBaseOrCreateEmpty(key);
+        Double rawScore = mapDBObj.getScore(member);
+        double score = rawScore == null ? 0d : rawScore;
+
+        double newScore = getSum(score, increment);
+
+        mapDBObj.put(member, newScore);
+        base().putValue(key, mapDBObj, null);
+        //ZINCRBY reports 'zincr'
+        base().notifyKeyspaceEvent(KeyspaceEvent.ZINCR, key);
+        return newScore;
+    }
+
+}

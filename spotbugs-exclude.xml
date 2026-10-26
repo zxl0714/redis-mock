@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter xmlns="https://github.com/spotbugs/filter/3.0.0"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <Match>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="DM_DEFAULT_ENCODING"/>
+            <Bug pattern="DM_CONVERT_CASE"/>
+        </Or>
+    </Match>
+    <Match>
+        <Class name="com.github.fppt.jedismock.RedisServer$RedisServiceJob"/>
+        <Bug pattern="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"/>
+    </Match>
+    <Match>
+        <!--The map of databases doubles as the server-wide data lock: every
+            command runs under OperationExecutorState.lock(), which returns this
+            very map. RedisServer.stop() takes the same monitor once, as a barrier
+            that returns only after the running script and every command still
+            waiting for the lock have finished. The map is exposed to the
+            package-private connection plumbing only, not to user code.-->
+        <Class name="com.github.fppt.jedismock.RedisServer"/>
+        <Bug pattern="USO_UNSAFE_ACCESSIBLE_OBJECT_SYNCHRONIZATION"/>
+    </Match>
+    <Match>
+        <!--False positive as of Spotbugs 4.8.4.0-->
+        <Class name="com.github.fppt.jedismock.datastructures.RMHyperLogLog"/>
+        <Bug pattern="MC_OVERRIDABLE_METHOD_CALL_IN_READ_OBJECT"/>
+    </Match>
+    <Match>
+        <Class name="com.github.fppt.jedismock.operations.sortedsets.ZAdd"/>
+        <Bug pattern="FE_FLOATING_POINT_EQUALITY"/>
+    </Match>
+    <Match>
+        <Class name="com.github.fppt.jedismock.datastructures.Slice"/>
+        <Bug pattern="SING_SINGLETON_IMPLEMENTS_SERIALIZABLE"/>
+    </Match>
+    <Match>
+        <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
+        <Or>
+            <Class name="com.github.fppt.jedismock.operations.keys.paramsparser.ExpirationTimeParam"/>
+            <Class name="com.github.fppt.jedismock.operations.strings.Set"/>
+            <Class name="com.github.fppt.jedismock.operations.strings.SetEx"/>
+        </Or>
+    </Match>
+    <Match>
+        <!--The read-only tables and sandbox metamethod closures inherit
+            LuaValue's identity-based equals() without overriding hashCode().
+            That is consistent with Object's identity hashCode, and these objects
+            are only ever stored as map/table *values* (or singletons), never as
+            hash keys. The keys used when building these tables are LuaStrings
+            (LuaValue.valueOf("..."), LuaValue.INDEX/NEWINDEX), which do define
+            both equals() and hashCode(), so the missing hashCode here is moot.-->
+
+        <Or>
+            <Package name="com.github.fppt.jedismock.operations.scripting.cjson"/>
+            <Package name="com.github.fppt.jedismock.operations.scripting"/>
+        </Or>
+        <Bug pattern="HE_INHERITS_EQUALS_USE_HASHCODE"/>
+    </Match>
+    <Match>
+        <!--New detector as of Spotbugs 4.10. The codebase intentionally widens
+            the visibility of inherited methods from protected to public (e.g.
+            ExpiringStorage.delete()/clear() overridden as public in the storage
+            and data-structure subclasses, the blocking-list poppers, the ZRange
+            bound parsers, Eval.response()). These overrides are deliberately
+            part of the public API of their subclasses and are called externally.-->
+        <Bug pattern="IAOM_DO_NOT_INCREASE_METHOD_ACCESSIBILITY"/>
+    </Match>
+    <Match>
+        <!--New detector as of Spotbugs 4.10. These constructors merely validate
+            their arguments (Objects.requireNonNull) and so may throw, which the
+            detector flags as a potential finalizer attack. None of these classes
+            define a finalizer, and the canonical remedy (making the class final)
+            is not possible here: ExpiringStorage and RedisBase are base classes,
+            and the remaining ones are simple value/data-structure types.-->
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+</FindBugsFilter>

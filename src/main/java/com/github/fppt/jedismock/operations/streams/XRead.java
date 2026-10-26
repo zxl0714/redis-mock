@@ -1,0 +1,229 @@
+package com.github.fppt.jedismock.operations.streams;
+
+import com.github.fppt.jedismock.datastructures.Slice;
+import com.github.fppt.jedismock.datastructures.streams.SequencedMap;
+import com.github.fppt.jedismock.datastructures.streams.SequencedMapIterator;
+import com.github.fppt.jedismock.datastructures.streams.StreamId;
+import com.github.fppt.jedismock.exception.WrongStreamKeyException;
+import com.github.fppt.jedismock.operations.AbstractRedisOperation;
+import com.github.fppt.jedismock.operations.RedisCommand;
+import com.github.fppt.jedismock.server.Response;
+import com.github.fppt.jedismock.storage.BlockingManager;
+import com.github.fppt.jedismock.storage.OperationExecutorState;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static com.github.fppt.jedismock.datastructures.streams.StreamErrors.NEGATIVE_TIMEOUT_ERROR;
+import static com.github.fppt.jedismock.datastructures.streams.StreamErrors.SYNTAX_ERROR;
+import static com.github.fppt.jedismock.datastructures.streams.StreamErrors.XREAD_ARGS_ERROR;
+
+/**
+ * XREAD [COUNT count] [BLOCK milliseconds] STREAMS key [key ...] id
+ *   [id ...]<br>
+ * All options are supported
+ */
+@RedisCommand(value = "xread", arity = -4)
+public class XRead extends AbstractRedisOperation {
+    private final Object lock;
+    private final boolean isInTransaction;
+    private final boolean isInScript;
+    private final OperationExecutorState state;
+    private final BlockingManager blockingManager;
+
+    public XRead(OperationExecutorState state, List<Slice> params) {
+        super(state.base(), params);
+        lock = state.lock();
+        isInTransaction = state.isTransactionModeOn();
+        //See AbstractBPop: a blocking command must not block inside a Lua script.
+        isInScript = state.scriptingManager().isRunning();
+        this.state = state;
+        this.blockingManager = state.blockingManager();
+    }
+
+    @Override
+    protected Slice response() {
+        int streamInd = 0;
+        int count;
+        long blockTimeNanosec = 0;
+        boolean isBlocking = false;
+
+        if ("count".equalsIgnoreCase(params().get(streamInd).toString())) {
+            count = Integer.parseInt(params().get(++streamInd).toString());
+            ++streamInd;
+        } else {
+            count = Integer.MAX_VALUE;
+        }
+
+        if ("block".equalsIgnoreCase(params().get(streamInd).toString())) {
+            blockTimeNanosec = Long.parseLong(params().get(++streamInd).toString()) * 1_000_000;
+            isBlocking = true;
+
+            if (blockTimeNanosec < 0) {
+                return Response.error(NEGATIVE_TIMEOUT_ERROR);
+            }
+
+            ++streamInd;
+        }
+
+        if (!"streams".equalsIgnoreCase(params().get(streamInd++).toString())) {
+            return Response.error(SYNTAX_ERROR);
+        }
+
+        /* After STREAMS args go in pairs */
+        if ((params().size() - streamInd) % 2 != 0) {
+            return Response.error(XREAD_ARGS_ERROR);
+        }
+
+        int streamsCount = (params().size() - streamInd) / 2;
+
+        SequencedMap<Slice, StreamId> mapKeyToBeginEntryId = new SequencedMap<>();
+
+        /* Mapping all stream ids */
+        for (int i = 0; i < streamsCount; ++i) {
+            Slice key = params().get(streamInd + i);
+            Slice id = params().get(streamInd + streamsCount + i);
+
+            try {
+                if (!base().exists(key)) {
+                    mapKeyToBeginEntryId.append(
+                            key,
+                            "$".equalsIgnoreCase(id.toString())
+                                    ? new StreamId(0, 0) // lowest possible id
+                                    : new StreamId(id)
+                    );
+                } else {
+                    StreamId lastId = getStreamFromBaseOrCreateEmpty(key).getStoredData().getTail();
+                    mapKeyToBeginEntryId.append(
+                            key,
+                            "$".equalsIgnoreCase(id.toString())
+                                    /* last id added to stream; a ran-dry stream has none yet */
+                                    ? (lastId == null ? new StreamId(0, 0) : lastId)
+                                    : new StreamId(id)
+                    );
+                }
+            } catch (WrongStreamKeyException e) {
+                return Response.error(e.getMessage());
+            }
+        }
+
+        List<Slice> output = new ArrayList<>();
+
+        /* Blocking */
+        long waitEnd = System.nanoTime() + blockTimeNanosec;
+        long waitTimeNanos;
+
+        if (isBlocking && !isInTransaction && !isInScript) {
+            boolean updated = false; // should be unblocked after XADD was invoked
+            //Records why the wait loop ended, so we don't re-probe the connection
+            //at delivery time (a transient probe failure would otherwise drop a
+            //legitimate reply and hang the client).
+            boolean connected = true;
+            //Register so INFO's blocked_clients reflects this waiter (the tcl
+            //suite's wait_for_blocked_client polls it before XADD). Unlike a
+            //list pop, a stream read is non-exclusive — a new entry satisfies
+            //every blocked reader — so there is no FIFO isFirst() check; we only
+            //need the count to be accurate.
+            List<Slice> streamKeys = new ArrayList<>();
+            for (Map.Entry<Slice, StreamId> entry : mapKeyToBeginEntryId) {
+                streamKeys.add(entry.getKey());
+            }
+            try (BlockingManager.Ticket ignored = blockingManager.register(streamKeys)) {
+                if (blockTimeNanosec > 0) {
+                    while (!updated && (connected = state.isClientConnected())
+                            && (waitTimeNanos = waitEnd - System.nanoTime()) >= 0) {
+                        for (Map.Entry<Slice, StreamId> entry : mapKeyToBeginEntryId) {
+                            StreamId tail = getStreamFromBaseOrCreateEmpty(entry.getKey())
+                                    .getStoredData()
+                                    .getTail();
+                            if (base().exists(entry.getKey())
+                                    && tail != null
+                                    && entry.getValue().compareTo(tail) < 0) {
+                                updated = true;
+                                break;
+                            }
+                        }
+
+                        if (waitTimeNanos / 1_000_000 < 500) {
+                            lock.wait(waitTimeNanos / 1_000_000, (int) waitTimeNanos % 1_000_000);
+                        } else {
+                            lock.wait(500, 0);
+                        }
+                    }
+                } else {
+                    while (!updated && (connected = state.isClientConnected())) {
+                        for (Map.Entry<Slice, StreamId> entry : mapKeyToBeginEntryId) {
+                            StreamId tail = getStreamFromBaseOrCreateEmpty(entry.getKey())
+                                        .getStoredData()
+                                        .getTail();
+                            if (base().exists(entry.getKey())
+                                    && tail != null
+                                    && tail.compareTo(entry.getValue()) > 0) {
+                                updated = true;
+                                break;
+                            }
+                        }
+                        lock.wait(500, 0);
+                    }
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return Response.NULL;
+            }
+
+            if (!connected) {
+                //Client disconnected while blocked: don't reply.
+                return Response.SKIP;
+            }
+        }
+
+        /* Response */
+        mapKeyToBeginEntryId.forEach((key, id) -> {
+            SequencedMap<StreamId, SequencedMap<Slice, Slice>> map = getStreamFromBaseOrCreateEmpty(key).getStoredData();
+            SequencedMapIterator<StreamId, SequencedMap<Slice, Slice>> it;
+
+            if (!base().exists(key)) {
+                return; // skip
+            }
+
+            if (map.getTail() == null || id.compareTo(map.getTail()) >= 0) {
+                return; // skip
+            }
+
+            try {
+                id = id.increment();
+            } catch (WrongStreamKeyException e) {
+                return; // impossible as 0xFFFFFFFFFFFFFFFF is greater or equal to all keys
+            }
+
+            it = map.iterator(id);
+
+            List<Slice> data = new ArrayList<>();
+            int addedEntries = 1;
+
+            while (it.hasNext() && addedEntries++ <= count) {
+                Map.Entry<StreamId, SequencedMap<Slice, Slice>> entry = it.next();
+
+                List<Slice> values = new ArrayList<>();
+
+                entry.getValue().forEach((k, v) -> {
+                    values.add(Response.bulkString(k));
+                    values.add(Response.bulkString(v));
+                });
+
+                data.add(Response.array(
+                        Response.bulkString(entry.getKey().toSlice()),
+                        Response.array(values)
+                ));
+            }
+
+            output.add(Response.array(
+                    Response.bulkString(key),
+                    Response.array(data)
+            ));
+        });
+
+        return Response.array(output);
+    }
+}

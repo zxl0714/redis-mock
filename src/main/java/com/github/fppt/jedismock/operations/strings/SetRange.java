@@ -1,0 +1,58 @@
+package com.github.fppt.jedismock.operations.strings;
+
+import com.github.fppt.jedismock.datastructures.RMString;
+import com.github.fppt.jedismock.datastructures.Slice;
+import com.github.fppt.jedismock.operations.AbstractRedisOperation;
+import com.github.fppt.jedismock.operations.RedisCommand;
+import com.github.fppt.jedismock.server.Response;
+import com.github.fppt.jedismock.storage.KeyspaceEvent;
+import com.github.fppt.jedismock.storage.RedisBase;
+
+import java.util.List;
+import java.util.Optional;
+
+import static com.github.fppt.jedismock.Utils.convertToInteger;
+
+@RedisCommand(value = "setrange", arity = 4, readOnly = false)
+public class SetRange extends AbstractRedisOperation {
+    public SetRange(RedisBase base, List<Slice> params) {
+        super(base, params);
+    }
+
+    @Override
+    protected Slice response() {
+        Slice key = params().get(0);
+        int offset = convertToInteger(params().get(1).toString());
+        if (offset < 0) {
+            return Response.error("ERR offset is out of range");
+        }
+        Slice value = params().get(2);
+        String oldValue = Optional.ofNullable(base().getRMString(key))
+                .map(RMString::getStoredDataAsString)
+                .orElse("");
+        String padding = "";
+        //(long) cast: offset is an int near Integer.MAX_VALUE, so a plain
+        //int+int could overflow to a negative, skip this guard, and then attempt
+        //a multi-GB allocation below.
+        if ((long) offset + value.length() > base().getProtoMaxBulkLen()) {
+            return Response.error("ERR string exceeds maximum allowed size (proto-max-bulk-len)");
+        }
+        if (offset > oldValue.length()) {
+            padding = new String(new byte[offset - oldValue.length()]);
+        }
+        String newValue =
+                oldValue.substring(0, Math.min(offset, oldValue.length()))
+                        + padding
+                        + value;
+        if (offset + value.length() < oldValue.length()) {
+            newValue += oldValue.substring(offset + value.length());
+        }
+        //An empty value writes nothing at all; anything else is a write (and so
+        //is reported) even when the resulting string is identical
+        if (value.length() > 0) {
+            base().putValue(key, Slice.create(newValue).extract(), null);
+            base().notifyKeyspaceEvent(KeyspaceEvent.SETRANGE, key);
+        }
+        return Response.integer(newValue.length());
+    }
+}

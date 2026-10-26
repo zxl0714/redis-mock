@@ -1,0 +1,32 @@
+name: build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: mvn -B -V verify -Dmaven.javadoc.skip
+
+      - name: Update list of supported operations
+        if: success() && github.ref == 'refs/heads/master'
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: Update list of supported operations

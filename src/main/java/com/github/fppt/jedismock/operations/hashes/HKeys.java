@@ -1,0 +1,31 @@
+package com.github.fppt.jedismock.operations.hashes;
+
+import com.github.fppt.jedismock.datastructures.Slice;
+import com.github.fppt.jedismock.operations.AbstractRedisOperation;
+import com.github.fppt.jedismock.operations.RedisCommand;
+import com.github.fppt.jedismock.server.Response;
+import com.github.fppt.jedismock.storage.RedisBase;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@RedisCommand(value = "hkeys", arity = 2)
+public class HKeys extends AbstractRedisOperation {
+    public HKeys(RedisBase base, List<Slice> params) {
+        super(base, params);
+    }
+
+    @Override
+    protected Slice response() {
+        Slice hash = params().get(0);
+
+        Map<Slice, Slice> fieldAndValueMap = base().getFieldsAndValuesReadOnly(hash);
+
+        return Response.array(
+                fieldAndValueMap.keySet().stream()
+                        .map(Response::bulkString)
+                        .collect(Collectors.toList())
+        );
+    }
+}

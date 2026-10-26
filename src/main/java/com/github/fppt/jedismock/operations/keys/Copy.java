@@ -1,0 +1,76 @@
+package com.github.fppt.jedismock.operations.keys;
+
+import com.github.fppt.jedismock.Utils;
+import com.github.fppt.jedismock.datastructures.RMDataStructure;
+import com.github.fppt.jedismock.datastructures.Slice;
+import com.github.fppt.jedismock.operations.AbstractRedisOperation;
+import com.github.fppt.jedismock.operations.RedisCommand;
+import com.github.fppt.jedismock.server.Response;
+import com.github.fppt.jedismock.storage.KeyspaceEvent;
+import com.github.fppt.jedismock.storage.OperationExecutorState;
+import com.github.fppt.jedismock.storage.RedisBase;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RedisCommand(value = "copy", arity = -3, readOnly = false)
+public class Copy extends AbstractRedisOperation {
+    private final OperationExecutorState state;
+    private final List<String> additionalParams;
+
+    public Copy(OperationExecutorState state, List<Slice> params) {
+        super(state.base(), params);
+        this.state = state;
+        this.additionalParams = params
+                .stream().skip(2).map(Slice::toString).collect(Collectors.toList());
+    }
+
+    private Integer destinationDb() {
+        String previous = null;
+        for (String param : additionalParams) {
+            if ("db".equalsIgnoreCase(previous)) {
+                return Utils.convertToInteger(param);
+            } else {
+                previous = param;
+            }
+        }
+        return null;
+    }
+
+    private boolean replace() {
+        return additionalParams.stream().anyMatch("replace"::equalsIgnoreCase);
+    }
+
+    @Override
+    protected Slice response() {
+        Slice source = params().get(0);
+        Slice destination = params().get(1);
+        RedisBase sourceBase = state.base();
+        RMDataStructure value = sourceBase.getValue(source);
+        if (value == null) { // source doesn't exist
+            return Response.integer(0);
+        }
+        Integer destinationIdx = destinationDb();
+        RedisBase destinationBase =
+                destinationIdx == null ?
+                        state.base()
+                        : state.base(destinationIdx);
+        if (destinationBase.exists(destination)) {
+            if (replace()) {
+                destinationBase.deleteValue(destination);
+            } else {
+                //Key already existed
+                return Response.integer(0);
+            }
+        }
+        destinationBase.putValue(destination, value, null);
+        Long deadline = sourceBase.getDeadline(source);
+        if (deadline != null) {
+            destinationBase.setDeadline(destination, deadline);
+        }
+        //Only the destination key is reported
+        destinationBase.notifyKeyspaceEvent(KeyspaceEvent.COPY_TO, destination);
+        //Key copied
+        return Response.integer(1);
+    }
+}

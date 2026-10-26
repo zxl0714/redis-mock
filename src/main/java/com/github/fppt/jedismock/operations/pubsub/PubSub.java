@@ -1,0 +1,47 @@
+package com.github.fppt.jedismock.operations.pubsub;
+
+import com.github.fppt.jedismock.Utils;
+import com.github.fppt.jedismock.datastructures.Slice;
+import com.github.fppt.jedismock.operations.AbstractRedisOperation;
+import com.github.fppt.jedismock.operations.RedisCommand;
+import com.github.fppt.jedismock.server.Response;
+import com.github.fppt.jedismock.storage.RedisBase;
+import com.github.fppt.jedismock.storage.SubscriptionRegistry;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RedisCommand(value = "pubsub", transactional = false, arity = -2)
+public class PubSub extends AbstractRedisOperation {
+    private final SubscriptionRegistry registry;
+
+    PubSub(RedisBase base, SubscriptionRegistry registry, List<Slice> params) {
+        super(base, params);
+        this.registry = registry;
+    }
+
+    @Override
+    protected Slice response() {
+        Slice subcommand = params().get(0);
+        if ("channels".equalsIgnoreCase(subcommand.toString())) {
+            String pattern =
+                    Utils.createRegexFromGlob(
+                            params().size() > 1 ? params().get(1).toString() : "*");
+            return Response.array(registry.getChannels().stream().filter(
+                    s -> s.toString().matches(pattern)
+            ).map(Response::bulkString).collect(Collectors.toList()));
+        } else if ("numsub".equalsIgnoreCase(subcommand.toString())) {
+            List<Slice> channelsAndCounts = new ArrayList<>();
+            for (Slice channel : params().subList(1, params().size())) {
+                channelsAndCounts.add(Response.bulkString(channel));
+                channelsAndCounts.add(Response.integer(registry.getSubscribersCount(channel)));
+            }
+            return Response.array(channelsAndCounts);
+        } else if ("numpat".equalsIgnoreCase(subcommand.toString())) {
+            return Response.integer(registry.getNumpat());
+        } else {
+            return Response.error(String.format("Unsupported operation: pubsub %s", subcommand));
+        }
+    }
+}

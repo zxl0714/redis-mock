@@ -1,0 +1,42 @@
+package com.github.fppt.jedismock.operations.hashes;
+
+import com.github.fppt.jedismock.operations.AbstractRedisOperation;
+import com.github.fppt.jedismock.operations.RedisCommand;
+import com.github.fppt.jedismock.server.Response;
+import com.github.fppt.jedismock.datastructures.Slice;
+import com.github.fppt.jedismock.storage.KeyspaceEvent;
+import com.github.fppt.jedismock.storage.RedisBase;
+
+import java.util.List;
+
+@RedisCommand(value = "hdel", arity = -3, readOnly = false)
+class HDel extends AbstractRedisOperation {
+    HDel(RedisBase base, List<Slice> params) {
+        super(base, params);
+    }
+
+    protected Slice response(){
+        Slice key = params().get(0);
+        int count = 0;
+
+        for (int i = 1; i < params().size(); ++i) {
+            Slice currKey = params().get(i);
+            Slice oldValue = base().getSlice(key, currKey);
+            base().deleteValue(key, currKey);
+
+            if (oldValue != null) {
+                ++count;
+            }
+        }
+
+        if (count > 0) {
+            base().notifyKeyspaceEvent(KeyspaceEvent.HDEL, key);
+            //Deleting the last field removes the hash, a generic del
+            if (!base().exists(key)) {
+                base().notifyKeyspaceEvent(KeyspaceEvent.DEL, key);
+            }
+        }
+
+        return Response.integer(count);
+    }
+}

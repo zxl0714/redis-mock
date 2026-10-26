@@ -1,0 +1,115 @@
+name: native-tests
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install TCL
+        run: sudo apt-get install -y tcl-tls
+
+      - name: Install wait4x
+        run: |
+          curl -#LO https://github.com/atkrad/wait4x/releases/latest/download/wait4x-linux-amd64.tar.gz
+          tar --one-top-level -xvf wait4x-linux-amd64.tar.gz
+          cp ./wait4x-linux-amd64/wait4x /usr/local/bin/wait4x
+
+      - name: checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Fast build and install JedisMock
+        run: mvn -B install -Dmaven.javadoc.skip -DskipTests -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Dcpd.skip
+
+      - name: Evaluate current JedisMock version
+        run: |
+          echo jm_version=$( mvn help:evaluate -Dexpression=project.version -q -DforceStdout ) >> $GITHUB_ENV 
+          cat $GITHUB_ENV
+
+      - name: Build jm-test-server
+        run: mvn -B verify -Djedismock.version=${{ env.jm_version }}
+        working-directory: native_tests/jm-test-server
+
+      - name: Prepare TCL test run
+        run: |
+          sudo chmod +x ./gen-test-certs.sh
+          sudo chmod +x ./runtest
+          ./gen-test-certs.sh
+        working-directory: native_tests/linux
+
+      - name: chmod
+        run: chmod +x native_tests/testnative
+
+      - name: string
+        run: ./testnative unit/type/string
+        working-directory: native_tests
+
+      - name: incr
+        if: always()
+        run: ./testnative unit/type/incr
+        working-directory: native_tests
+
+      - name: hash
+        if: always()
+        run: ./testnative unit/type/hash unit/hashexpire
+        working-directory: native_tests
+
+      - name: list
+        if: always()
+        run: ./testnative unit/type/list-2 unit/type/list unit/type/list-3
+        working-directory: native_tests
+
+      - name: set
+        if: always()
+        run: ./testnative unit/type/set
+        working-directory: native_tests
+
+      - name: zset
+        if: always()
+        run: ./testnative unit/type/zset
+        working-directory: native_tests
+
+      - name: stream
+        if: always()
+        run: ./testnative unit/type/stream
+        working-directory: native_tests
+
+      - name: keyspace
+        if: always()
+        run: ./testnative unit/keyspace
+        working-directory: native_tests
+
+      - name: expire
+        if: always()
+        run: ./testnative unit/expire
+        working-directory: native_tests
+
+      - name: multi
+        if: always()
+        run: ./testnative unit/multi
+        working-directory: native_tests
+
+      - name: scripting
+        if: always()
+        run: ./testnative unit/scripting
+        working-directory: native_tests
+
+      - name: functions
+        if: always()
+        run: ./testnative unit/functions
+        working-directory: native_tests
+
+      - name: pubsub
+        if: always()
+        run: ./testnative unit/pubsub
+        working-directory: native_tests

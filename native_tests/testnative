@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -x
+cd linux || exit
+
+java -jar ../jm-test-server/target/jm-test-server-1.0-SNAPSHOT-jar-with-dependencies.jar &
+PID=$!
+
+wait4x redis redis://127.0.0.1:39807
+
+success=true
+for param in "$@"; do
+  ./runtest --host 127.0.0.1 --port 39807 --single "$param"
+  if [[ $? -ne 0 ]]; then
+    success=false
+    break
+  fi
+done
+
+kill $PID
+
+if $success; then
+  exit 0
+else
+  exit 1
+fi

@@ -1,0 +1,52 @@
+package com.github.fppt.jedismock.operations.keys;
+
+import com.github.fppt.jedismock.datastructures.Slice;
+import com.github.fppt.jedismock.operations.AbstractRedisOperation;
+import com.github.fppt.jedismock.operations.RedisCommand;
+import com.github.fppt.jedismock.operations.keys.paramsparser.ExpirationExtraParam;
+import com.github.fppt.jedismock.operations.keys.paramsparser.ExpirationParamsException;
+import com.github.fppt.jedismock.operations.keys.paramsparser.ExpirationTimeParam;
+import com.github.fppt.jedismock.server.Response;
+import com.github.fppt.jedismock.storage.KeyspaceEvent;
+import com.github.fppt.jedismock.storage.RedisBase;
+
+import java.util.List;
+
+@RedisCommand(value = "pexpire", arity = -3, readOnly = false)
+class PExpire extends AbstractRedisOperation {
+
+    PExpire(RedisBase base, List<Slice> params) {
+        super(base, params);
+    }
+
+    protected boolean useMillis() {
+        return true;
+    }
+
+    protected Slice response() {
+        try {
+            Slice key = params().get(0);
+            ExpirationTimeParam expirationTime = new ExpirationTimeParam(self().value(),
+                    params().get(1), useMillis(), base().getClock().millis());
+            ExpirationExtraParam extraParam = new ExpirationExtraParam(
+                    params(), false
+            );
+            long newTTL = expirationTime.getMillis();
+            if (base().exists(key) && extraParam.checkTiming(
+                    base().getTTL(key), newTTL)) {
+                if (newTTL <= 0) {
+                    //An expiration in the past deletes the key immediately, and is
+                    //reported as a 'del' rather than an 'expired'
+                    base().deleteValue(key);
+                    base().notifyKeyspaceEvent(KeyspaceEvent.DEL, key);
+                    return Response.integer(1);
+                }
+                long result = base().setTTL(key, newTTL);
+                base().notifyKeyspaceEvent(KeyspaceEvent.EXPIRE, key);
+                return Response.integer(result);
+            } else return Response.integer(0);
+        } catch (ExpirationParamsException e) {
+            return Response.error(e.getMessage());
+        }
+    }
+}

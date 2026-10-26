@@ -1,0 +1,27 @@
+package com.github.fppt.jedismock.operations.sortedsets;
+
+import com.github.fppt.jedismock.datastructures.Slice;
+import com.github.fppt.jedismock.operations.RedisCommand;
+import com.github.fppt.jedismock.storage.KeyspaceEvent;
+import com.github.fppt.jedismock.storage.RedisBase;
+
+import java.util.List;
+
+@RedisCommand(value = "zremrangebyscore", arity = 4, readOnly = false)
+public class ZRemRangeByScore extends AbstractZRangeByScore {
+
+    ZRemRangeByScore(RedisBase base, List<Slice> params) {
+        super(base, params);
+    }
+
+    @Override
+    protected Slice response() {
+        expectNoOptions();
+        key = params().get(0);
+        mapDBObj = getZSetFromBaseOrCreateEmpty(key);
+
+        final Slice start = params().get(1);
+        final Slice end = params().get(2);
+        return remRangeFromKey(getRange(getStartBound(start), getEndBound(end)), KeyspaceEvent.ZREMRANGEBYSCORE);
+    }
+}

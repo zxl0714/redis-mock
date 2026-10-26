@@ -1,0 +1,39 @@
+package com.github.fppt.jedismock.operations.scripting;
+
+import com.github.fppt.jedismock.datastructures.Slice;
+import com.github.fppt.jedismock.operations.AbstractRedisOperation;
+import com.github.fppt.jedismock.operations.RedisCommand;
+import com.github.fppt.jedismock.server.Response;
+import com.github.fppt.jedismock.storage.OperationExecutorState;
+import com.github.fppt.jedismock.storage.RedisBase;
+
+import java.util.List;
+
+@RedisCommand(value = "evalsha", arity = -3)
+public class EvalSha extends AbstractRedisOperation {
+    private final OperationExecutorState state;
+
+    public EvalSha(final RedisBase base, final List<Slice> params, OperationExecutorState state) {
+        super(base, params);
+        this.state = state;
+    }
+
+    /**
+     * @return whether the cached script runs read-only, as {@code EVALSHA_RO}
+     * does: any write command it dispatches is then refused
+     */
+    protected boolean readOnly() {
+        return false;
+    }
+
+    @Override
+    protected Slice response() {
+        final String sha = params().get(0).toString();
+        final String script = base().getCachedLuaScript(sha);
+        if (script == null) {
+            return Response.error("NOSCRIPT No matching script. Please use EVAL.");
+        }
+        params().set(0, Slice.create(script));
+        return new Eval(base(), params(), state).response(readOnly());
+    }
+}

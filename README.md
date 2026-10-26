@@ -1,116 +1,346 @@
-# redis-mock
+[![GitHub release](https://img.shields.io/github/release/fppt/jedis-mock.svg)](https://github.com/fppt/jedis-mock/releases/latest)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.fppt/jedis-mock)](https://central.sonatype.com/artifact/com.github.fppt/jedis-mock)
 
-A simple redis java mock for unit testing.
+# Jedis-Mock
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.zxl0714/redis-mock/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.zxl0714/redis-mock)
+Jedis-Mock is an in-memory mock of Redis/Valkey for Java testing, which can also work as a test proxy.
+While being simple to use, it faithfully replicates Redis/Valkey behaviour, with rich and precise support
+for data types, streams, transactions, [Lua scripting](#luascripting), [keyspace notifications](#keyspacenotifications)
+and [cluster mode](#cluster) — effectively making it a Redis/Valkey reimplementation in Java.
 
+Despite its name, it works at the network protocol level and can be used with any Redis client
+(be it [Jedis](https://github.com/redis/jedis), [Lettuce](https://github.com/lettuce-io/lettuce-core), [Redisson](https://github.com/redisson/redisson) or others).
+When used as a mock, it allows you to test behaviour dependent on Redis/Valkey without having to deploy an instance of Redis/Valkey.
+
+By no means is it intended for production use: e. g. the string value of a single key is modelled by `byte[]` and hence cannot
+exceed 2 GB, this project has never been tuned for performance or memory footprint, and it doesn't provide disk persistence. What it does provide instead
+are white-box testing capabilities, such as a [command interceptor](#interceptor) and [clock injection](#clockinjection).
+
+[List of currently supported Redis operations](supported_operations.md).
+
+## Why, if we have TestContainers?
+[TestContainers](https://www.testcontainers.org/) is a great solution for integration tests with real services, including Redis. However, sometimes we want to use mock or proxy for some of the tests for the following reasons:
+
+* TestContainers require Docker. Jedis-Mock is just a Maven dependency which, when used as 'pure' mock, can be run on any machine, right now.
+* TestContainers tests can be slow and resource-consuming. Jedis-Mock tests are lightning fast, which
+encourages developers to write more tests and run them more often.
+* While Redis running in TestContainers is a "black box", Jedis-Mock facilitates "white box" testing: we can verify what was actually called and interfere with the reply via a [command interceptor](#interceptor).
+* With Jedis-Mock in [cluster emulation mode](#cluster), one can use cluster connection APIs (e. g. `JedisCluster`) without spinning up 3 instances of Redis.
+* Using [clock injection](#clockinjection), we can "fast forward" and avoid waiting before keys expiration, or, on the contrary, "freeze time" and be guaranteed that keys are not expired before the end of the test scenario.   
+* If you wish, you can use Jedis-Mock *together* with TestContainers, delegating command execution 
+  to a real Redis instance, intercepting some of the calls when needed.
+
+## How can I ensure that this mock functions exactly like real Redis?
+We employ two practices to achieve maximum compatibility with Redis:
+
+1. Comparison testing: All tests for Jedis-Mock are executed twice—once against the mock and once against a real Redis instance running in TestContainers. This approach ensures that our tests for Jedis-Mock include accurate assertions.
+
+2. Execution of native Redis tests: We continuously expand the suite of native Redis tests that are successfully executed against Jedis-Mock. These tests are the ones employed for regression testing of Redis itself. You can explore the specific tests being executed [here](.github/workflows/native-tests.yml).
+
+However, the primary objective of a test mock is not to be a bug-to-bug compatible reimplementation, but to expose errors in the code being tested. Therefore, it is acceptable for a mock to fail more frequently than a real system and be more restrictive.
+
+## Quickstart 
+
+Add it as a test dependency in Maven as:
 
 ```xml
 <dependency>
-  <groupId>com.github.zxl0714</groupId>
-  <artifactId>redis-mock</artifactId>
-  <version>0.1</version>
+  <groupId>com.github.fppt</groupId>
+  <artifactId>jedis-mock</artifactId>
+  <version>1.1.20</version>
+  <scope>test</scope>
 </dependency>
 ```
 
-## How to use it
+Create a Redis server and bind it to your client:
 
-The very simple way.
+```java
+//This binds mock redis server to a random port
+RedisServer server = RedisServer
+        .newRedisServer()
+        .start();
 
+//Jedis connection:
+Jedis jedis = new Jedis(server.getHost(), server.getBindPort());
+
+//Lettuce connection:
+RedisClient redisClient = RedisClient
+        .create(String.format("redis://%s:%s",
+        server.getHost(), server.getBindPort()));
+
+//Redisson connection:
+Config config = new Config();
+config.useSingleServer().setAddress(
+        String.format("redis://%s:%d",
+        server.getHost(), redisServer.getBindPort()));
+RedissonClient client = Redisson.create(config);
 ```
-private static RedisServer server = null;
 
-@Before
-public void before() throws IOException {
-  server = RedisServer.newRedisServer();  // bind to a random port
+From here test as needed.
+
+## <a name="cluster">Cluster mode support</a>
+
+Sometimes you need to use cluster connection APIs in your tests. Jedis-Mock can emulate "cluster mode" by mocking a single node holding all the hash slots (0-16383) so that common connectivity libraries can successfully connect and work. Just use `withClusterModeEnabled()` for `ServiceOptions`:
+
+```java
+server = RedisServer
+        .newRedisServer()
+        .setOptions(ServiceOptions.defaultOptions().withClusterModeEnabled())
+        .start();
+
+//JedisCluster connection:
+Set<HostAndPort> jedisClusterNodes = new HashSet<>();
+jedisClusterNodes.add(new HostAndPort(server.getHost(), server.getBindPort()));
+JedisCluster jedisCluster = new JedisCluster(jedisClusterNodes);
+
+
+//Lettuce connection:
+RedisClusterClient redisClient = RedisClusterClient
+        .create(String.format("redis://%s:%s", server.getHost(), server.getBindPort()));
+```
+
+Note that support of `CLUSTER` subcommands is limited to the  minimum that is necessary for successful usage of `JedisCluster`/`RedisClusterClient`.
+
+## <a name="interceptor">Using `RedisCommandInterceptor`</a>
+
+`RedisCommandInterceptor` is a functional interface which can be used to intercept calls to Jedis-Mock. 
+You can use it as following:
+
+```java
+RedisServer server = RedisServer
+    .newRedisServer()
+    .setOptions(ServiceOptions.withInterceptor((state, roName, params) -> {
+        if ("get".equalsIgnoreCase(roName)) {
+            //You can imitate any reply from Redis
+            return Response.bulkString(Slice.create("MOCK_VALUE"));
+        } else if ("echo".equalsIgnoreCase(roName)) {
+            //You can write any verifications here
+            assertEquals("hello", params.get(0).toString());
+            //And imitate connection breaking
+            return MockExecutor.breakConnection(state);
+        } else {
+            //Delegate execution to JedisMock which will mock the real Redis behaviour (when it can)
+            return MockExecutor.proceed(state, roName, params);
+        }
+        //NB: you can also delegate to a 'real' Redis in TestContainers here
+    }))
+    .start();
+try (Jedis jedis = new Jedis(server.getHost(), server.getBindPort())) {
+    assertEquals("MOCK_VALUE", jedis.get("foo"));
+    assertEquals("OK", jedis.set("bar", "baz"));
+    assertThrows(JedisConnectionException.class, () -> jedis.echo("hello"));
 }
-
-@Test
-public void test() {
-  ...
-  Jedis jedis = new Jedis(server.getHost(), server.getBindPort());
-  ...
-}
-
-@After
-public void after() {
-  server.stop();
-  server = null;
-}
+server.stop();
 ```
 
-## Master and Slave
-
-```
-RedisServer master = newRedisServer();
-RedisServer slave = newRedisServer();
-master.setSlave(slave);
-```
+:warning: if you are going to mutate the shared state, synchronize on `state.lock()` first!
+(See how it's done in [`MockExecutor#proceed`](src/main/java/com/github/fppt/jedismock/operations/server/MockExecutor.java#L23)). 
 
 ## Fault tolerance testing
 
-We can make a RedisServer close connection after every serveral commands. This will cause a connection exception for clients.
+We can make a RedisServer close connection after several commands. This will cause a connection exception for clients.
+
+```java
+RedisServer server = RedisServer
+                .newRedisServer()
+                 //This is a special type of interceptor
+                .setOptions(ServiceOptions.executeOnly(3))
+                .start();
+try (Jedis jedis = new Jedis(server.getHost(),
+        server.getBindPort())) {
+    assertEquals(jedis.set("ab", "cd"), "OK");
+    assertEquals(jedis.set("ab", "cd"), "OK");
+    assertEquals(jedis.set("ab", "cd"), "OK");
+    assertThrows(JedisConnectionException.class, () -> jedis.set("ab", "cd"));
+}
+```
+
+## <a name="luascripting">Lua scripting support
+
+JedisMock supports Lua scripting (`EVAL`, `EVALSHA`, `SCRIPT LOAD/EXISTS/FLUSH/KILL` commands) via [luaj](https://github.com/luaj/luaj).  
+
+```java
+String script =
+                "local a, b = 0, 1\n" +
+                "for i = 2, ARGV[1] do\n" +
+                "  local temp = a + b\n" +
+                "  a = b\n" +
+                "  b = temp\n" +
+                "  redis.call('RPUSH',KEYS[1], temp)\n" +
+                "end\n" ;
+jedis.eval(script, 1, "mylist", "10");
+//Yields first 10 Fibonacci numbers
+jedis.lrange("mylist", 0, -1));        
+```
+
+:warning: Lua language capabilities are restricted to what is provided by current LuaJ version. Methods provided by `redis` global object are currently restricted to what was available in Redis version 2.6.0 (see [redis.lua](src/main/resources/redis.lua)).
+
+### Script timeouts: `BUSY` and `SCRIPT KILL`
+
+A long-running (or even infinite) script does not lock up the mock. Once a script has been running longer than `lua-time-limit` milliseconds, other connections get the same `-BUSY Redis is busy running a script. You can only call SCRIPT KILL or SHUTDOWN NOSAVE.` reply as real Redis, and `SCRIPT KILL` aborts the running script (replying `-NOTBUSY` when nothing is running, and `-UNKILLABLE` once the script has executed a write command, in which case the server stays busy until the script ends). `SHUTDOWN NOSAVE` terminates even such a script: as in real Redis it stops the whole server, closing every connection without a reply and releasing the port, after which `isRunning()` is `false` and `start()` may be called again. The threshold defaults to 5000 ms and can be changed with `CONFIG SET lua-time-limit <ms>` (its alias `busy-reply-threshold` is also accepted); `0` disables it. This lets you test client behaviour around busy scripts and transactions interrupted by a script timeout.
+
+### Redis Functions: `FUNCTION` and `FCALL`
+
+JedisMock also supports Redis Functions: `FUNCTION LOAD [REPLACE]`, `DELETE`, `LIST`, `FLUSH`, `STATS`, `KILL`, and `FCALL`, the successor to `EVAL`/`EVALSHA` for persistently registered Lua libraries.
+
+```java
+jedis.functionLoad(
+        "#!lua name=mylib\n" +
+        "redis.register_function('fib', function(keys, args)\n" +
+        "  local a, b = 0, 1\n" +
+        "  for i = 2, tonumber(args[1]) do\n" +
+        "    a, b = b, a + b\n" +
+        "  end\n" +
+        "  return b\n" +
+        "end)");
+jedis.fcall("fib", List.of(), List.of("10"));
+//Yields the 10th Fibonacci number
+```
+
+:warning: `FUNCTION DUMP`/`RESTORE`, and the `flags` argument to `redis.register_function` are not yet supported.
+
+A busy `FCALL` behaves the same way as a busy `EVAL` (see above), except a client must use `FUNCTION KILL` instead of `SCRIPT KILL` to abort it — real Redis rejects `SCRIPT KILL` on a running function (and `FUNCTION KILL` on a running script) with the same `-BUSY` reply, and JedisMock matches that.
+
+Feel free to report an issue if you have any problems with Lua scripting in Jedis-Mock.
+
+## <a name="clockinjection">Clock injection</a>
+
+[`java.time.Clock`](https://docs.oracle.com/javase/8/docs/api/java/time/Clock.html) injection is supported via `setClock` method on `RedisServer`. The injected clock is used for calculation and verification of the keys expiration time. Thus, it's possible to "freeze" or "skip" time for better testing of keys expiration. `setClock` is a thread-safe method which can be called as needed from any place of the code.
+
+### "Freezing" time
+
+```java
+jedis.setex("key1", 1, "v1");
+server.setClock(Clock.fixed(Instant.now(), ZoneId.systemDefault()));
+Thread.sleep(1500);
+//The key must have expired, but the time is stopped
+assertThat(jedis.exists("key1")).isTrue();
+```
+### Skipping time
+```java
+jedis.setex("key1", 20, "v1");
+jedis.setex("key2", 40, "v2");
+
+//Skipping 30 seconds: key1 expires, key2 not yet
+server.setClock(Clock.offset(server.getClock(), Duration.ofSeconds(30)));
+assertThat(jedis.exists("key1")).isFalse();
+assertThat(jedis.exists("key2")).isTrue();
+
+//Skipping another 30 seconds: both keys expire
+server.setClock(Clock.offset(server.getClock(), Duration.ofSeconds(30)));
+assertThat(jedis.exists("key1")).isFalse();
+assertThat(jedis.exists("key2")).isFalse();
+```
+
+### Setting time in the past
+```java
+jedis.setex("key1", 1, "v1");
+//Give extra two seconds for the key to expire
+server.setClock(Clock.offset(server.getClock(), Duration.ofSeconds(-2)));
+Thread.sleep(1500);
+assertThat(jedis.exists("key1")).isTrue();
+Thread.sleep(1600);
+assertThat(jedis.exists("key1")).isFalse();
+```
+:warning: Setting time in the past does not "magically revive" the keys that have already been expired, although it provides extra time before the expiration of the keys still present in the database. Also, clock injection does not change the semantics of waiting operations: e.g. `BLPOP mylist 10` will be waiting for the period of 10 seconds regardless of the changes in the injected clock.
+
+## `CONFIG GET` / `CONFIG SET`
+
+`CONFIG` is supported as a deliberately *thin* mock. Fully modelling Redis configuration is a non-goal; the point is twofold:
+
+* Real-world code issues `CONFIG` even when you never call it directly, this should not fail with an "unsupported operation" error.
+* A value written with `CONFIG SET` should read back with `CONFIG GET`.
+
+So **arbitrary parameters are accepted and round-trip** through a separate namespace without affecting the mock in any way (an unset parameter reads back as an empty string, matching real Redis). For example, setting `maxmemory-policy` stores the value and returns it on `GET`, but does not actually change eviction behaviour.
+
+Only the following parameters are actually honoured by the mock:
+
+| Parameter | Effect | Default |
+| --- | --- | --- |
+| `lua-time-limit` (alias `busy-reply-threshold`) | how long a Lua script may run before other clients get `-BUSY` (see [Script timeouts](#script-timeouts-busy-and-script-kill)) | `5000` (ms); `0` disables |
+| `proto-max-bulk-len` | largest string a command may build, enforced by `SETRANGE`/`APPEND` (`-ERR string exceeds maximum allowed size`) | `536870912` (512 MB) |
+| `notify-keyspace-events` | which [keyspace notifications](#keyspacenotifications) are published | `""` (disabled) |
+
+`proto-max-bulk-len` is capped at `Integer.MAX_VALUE`, since the mock stores strings as `byte[]` and cannot honour a larger limit. Glob-style patterns in `CONFIG GET` are not supported; each argument is treated as a literal parameter name.
+
+
+## <a name="keyspacenotifications">Keyspace notifications</a>
+
+[Keyspace notifications](https://redis.io/docs/latest/develop/pubsub/keyspace-notifications/) are supported: enable them with `CONFIG SET notify-keyspace-events` and subscribe to the
+`__keyspace@<db>__:<key>` and/or `__keyevent@<db>__:<event>` channels as you would against a real server.
+
+```java
+jedis.configSet("notify-keyspace-events", "KEA");   // all events, both channel families
+
+// in another connection
+jedis.psubscribe(new JedisPubSub() {
+    @Override
+    public void onPMessage(String pattern, String channel, String message) {
+        // __keyspace@0__:mykey -> set
+        // __keyevent@0__:set   -> mykey
+    }
+}, "__key*@0__:*");
+```
+
+The flag string is parsed and validated exactly as Redis does, so `CONFIG GET` reports the canonical
+form (`KA` reads back as `AK`) and an unknown flag character is rejected. Pub/Sub is server-wide, so a
+subscriber on one database receives events for every database.
+
+### Supported event classes
+
+| Flag | Class | Events |
+| --- | --- | --- |
+| `K` | keyspace channel | publishes to `__keyspace@<db>__:<key>` |
+| `E` | keyevent channel | publishes to `__keyevent@<db>__:<event>` |
+| `g` | generic | `del`, `expire`, `persist`, `rename_from`, `rename_to`, `move_from`, `move_to`, `copy_to` |
+| `$` | string | `set`, `append`, `setrange`, `incrby`, `incrbyfloat` |
+| `l` | list | `lpush`, `rpush`, `lpop`, `rpop`, `linsert`, `lset`, `lrem`, `ltrim`, `sortstore` |
+| `s` | set | `sadd`, `srem`, `spop`, `sinterstore`, `sunionstore`, `sdiffstore` |
+| `h` | hash | `hset`, `hdel`, `hincrby`, `hincrbyfloat` |
+| `z` | sorted set | `zadd`, `zincr`, `zrem`, `zremrangebyscore`, `zremrangebyrank`, `zremrangebylex`, `zunionstore`, `zinterstore`, `zdiffstore`, `zrangestore`, `zpopmin`, `zpopmax` |
+| `t` | stream | `xadd`, `xtrim`, `xdel` |
+| `x` | expired | `expired` |
+| `n` | new key | `new` |
+| `A` | alias for `g$lshzxet` (and `d`) — note it does **not** cover `n` or `m` | |
+
+As in Redis, the event name is not always the command name: every flavour of assignment reports `set`,
+`DECR`/`DECRBY` report `incrby`, `ZINCRBY` reports `zincr`, `UNLINK` reports `del`, and emptying a
+container reports the *generic* `del` in addition to the type's own event.
+
+### Current limitations
+
+* **No active expiry.** Keys expire lazily, when something touches them, so a key that nobody reads
+  produces its `expired` event later than a real server would (which expires in the background). Code
+  that periodically scans its keys — Spring Session's cleanup task, for example — works fine.
+* **`e` (evicted) and `m` (key-miss) events are not published.** The mock has no `maxmemory`, so
+  nothing is ever evicted, and key misses are not tracked.
+* **`d` (module) events are not published**, as the mock has no module support.
+* **Stream consumer-group events are absent** (`xgroup-create`, `xgroup-createconsumer`,
+  `xgroup-delconsumer`, `xgroup-destroy`, `xsetid`, `xclaim`) because the mock does not implement the
+  consumer-group commands themselves.
+* **`TTL`/`PTTL` on an already-expired key does not publish `expired`.** The event is published from
+  the value-access path, not from TTL lookups.
+* **An expiration set in the past reports `del`, matching Redis**, whereas Valkey reports `expired`
+  for the same command.
+* Events are published for hash-field expiration commands (`HEXPIRE` and friends) only insofar as
+  they set TTLs; the dedicated `hexpired`/`hpersist` events of newer Redis are not implemented.
+
+
+## Supported and Missing Operations
+
+All currently supported and missing operations are listed [here](supported_operations.md).
+
+If you get the following error:
 
 ```
-RedisServer server = RedisServer.newRedisServer();
-ServiceOptions options = new ServiceOptions();
-options.setCloseSocketAfterSeveralCommands(3);
-server.setOptions(options);
-server.start();
+Unsupported operation {}
 ```
 
-## Support Commands
+please feel free to create an issue requesting the missing operation, 
+or implement it yourself in interceptor and send us the code. It's fun!
 
-strlen
-
-get
-
-append
-
-exists
-
-set
-
-ttl
-
-decrby
-
-pfadd
-
-pfmerge
-
-mget
-
-mset
-
-getset
-
-del
-
-expireat
-
-pexpireat
-
-setex
-
-psetex
-
-setnx
-
-setbit
-
-getbit
-
-pttl
-
-expire
-
-pexpire
-
-incr
-
-incrby
-
-decr
-
-pfcount
+Command implementations live in `src/main/java/com/github/fppt/jedismock/operations/`,
+one class per command, annotated with `@RedisCommand("name")`. The constructor
+declares what the command needs and the arguments are injected by type; the
+annotation processor that generates the command registry rejects, at compile
+time, a constructor parameter of any other type and names the ones it can supply.

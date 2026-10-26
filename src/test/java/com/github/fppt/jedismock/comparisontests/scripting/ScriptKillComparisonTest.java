@@ -1,0 +1,157 @@
+package com.github.fppt.jedismock.comparisontests.scripting;
+
+import com.github.fppt.jedismock.comparisontests.ComparisonBase;
+import com.github.fppt.jedismock.comparisontests.TestErrorMessages;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
+import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.exceptions.JedisBusyException;
+import redis.clients.jedis.exceptions.JedisDataException;
+
+import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+/**
+ * Covers {@code SCRIPT KILL}, which the mock previously did not implement at all.
+ *
+ * <p>This is the deficiency behind the hang of the {@code unit/multi.tcl} test
+ * "MULTI and script timeout" (and its "EXEC / MULTI-EXEC body and script
+ * timeout" siblings): those tests start a runaway
+ * {@code eval {while true do end} 0} and then issue {@code SCRIPT KILL} to abort
+ * it. The mock executes every command — {@code EVAL} included — under a single
+ * global lock, so a runaway script wedged the whole server and nothing could
+ * stop it.
+ *
+ * <p>The fix runs {@code SCRIPT KILL} on a lock-free path (it must take effect
+ * while the runaway script still holds the lock) and aborts the script through a
+ * LuaJ per-instruction hook. Each test asserts real-Redis behaviour, so both the
+ * "real" and "mock" variants pass.
+ */
+@ExtendWith(ComparisonBase.class)
+public class ScriptKillComparisonTest {
+
+    /**
+     * {@code SCRIPT KILL} with nothing running is a defined Redis command: it
+     * replies {@code -NOTBUSY No scripts in execution right now.} Fast and
+     * deterministic — no script involved.
+     */
+    @TestTemplate
+    public void scriptKillOnIdleServerReportsNotBusy(Jedis jedis) {
+        assertThatThrownBy(jedis::scriptKill)
+                .isInstanceOf(JedisDataException.class)
+                .hasMessageContaining("NOTBUSY");
+    }
+
+    /**
+     * A runaway script must not wedge the whole server: {@code SCRIPT KILL} from
+     * another connection terminates it and the server stays responsive. The
+     * {@code assertTimeoutPreemptively} guard turns a regression (the old
+     * deadlock) into a clean failure instead of a hung suite.
+     */
+    @TestTemplate
+    public void scriptKillTerminatesRunawayScript(Jedis jedis, HostAndPort hostAndPort) throws InterruptedException {
+        // Lower the busy threshold so SCRIPT KILL is permitted quickly.
+        jedis.configSet("lua-time-limit", "100");
+
+        AtomicReference<Exception> caughtException = new AtomicReference<>();
+        CountDownLatch exceptionGate = new CountDownLatch(1);
+        Jedis busyClient = new Jedis(hostAndPort.getHost(), hostAndPort.getPort(), 1_000_000);
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            pool.submit(() -> {
+                try {
+                    busyClient.eval("while true do end", 0);
+                } catch (Exception e) {
+                    caughtException.set(e);
+                    exceptionGate.countDown();
+                }
+            });
+
+            Assertions.assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+                // Let the script start and (on real Redis) become flagged busy.
+                Thread.sleep(500);
+                // Returns OK and unblocks the runaway script.
+                jedis.scriptKill();
+                // The server must remain responsive afterwards.
+                assertThat(jedis.ping()).isEqualTo("PONG");
+            }, TestErrorMessages.DEADLOCK_ERROR_MESSAGE);
+            //The killed EVAL has to read the server's error reply off the socket
+            //before the teardown below closes it, otherwise the blocked call fails
+            //with "Socket closed" instead of the error the server actually sent.
+            assertThat(exceptionGate.await(5, TimeUnit.SECONDS)).withFailMessage("eval did not throw an exception").isTrue();
+        } finally {
+            pool.shutdownNow();
+            busyClient.close();
+        }
+
+        assertThat(caughtException.get())
+                .isInstanceOf(JedisDataException.class)
+                .hasMessage("ERR Script killed by user with SCRIPT KILL... script: 694a5fe1ddb97a4c6a1bf299d9537c7d3d0f84e7, on @user_script:1.");
+    }
+
+    /**
+     * A script cannot shield itself from {@code SCRIPT KILL} by wrapping its
+     * work in {@code pcall}: real Redis keeps raising the kill error after a
+     * {@code pcall} swallowed it, so the script still dies. (From Valkey's
+     * "Timedout read-only scripts can be killed by SCRIPT KILL even when use
+     * pcall".)
+     */
+    @TestTemplate
+    public void scriptKillCannotBeCaughtByPcall(Jedis jedis, HostAndPort hostAndPort) throws InterruptedException {
+        jedis.configSet("lua-time-limit", "100");
+
+        AtomicReference<Exception> caughtException = new AtomicReference<>();
+        CountDownLatch exceptionGate = new CountDownLatch(1);
+        Jedis busyClient = new Jedis(hostAndPort.getHost(), hostAndPort.getPort(), 1_000_000);
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            pool.submit(() -> {
+                try {
+                    busyClient.eval("local f = function() while 1 do redis.call('ping') end end while 1 do pcall(f) end", 0);
+                } catch (Exception e) {
+                    caughtException.set(e);
+                    exceptionGate.countDown();
+                }
+            });
+
+            Assertions.assertTimeoutPreemptively(Duration.ofSeconds(10), () -> {
+                Thread.sleep(500);
+                jedis.scriptKill();
+                //Real Redis re-raises the kill on every line once a pcall swallowed
+                //it, so the loop dies at one of its next iterations, not at once:
+                //wait for the server to come back, as the Valkey test does.
+                for (int i = 0; i < 50 && isBusy(jedis); i++) {
+                    Thread.sleep(100);
+                }
+                assertThat(jedis.ping()).isEqualTo("PONG");
+            }, TestErrorMessages.DEADLOCK_ERROR_MESSAGE);
+            //See scriptKillTerminatesRunawayScript: read the reply before closing.
+            assertThat(exceptionGate.await(5, TimeUnit.SECONDS)).withFailMessage("eval did not throw an exception").isTrue();
+        } finally {
+            pool.shutdownNow();
+            busyClient.close();
+        }
+
+        assertThat(caughtException.get())
+                .isInstanceOf(JedisDataException.class)
+                .hasMessageContaining("killed by user");
+    }
+
+    private static boolean isBusy(Jedis jedis) {
+        try {
+            jedis.ping();
+            return false;
+        } catch (JedisBusyException e) {
+            return true;
+        }
+    }
+}
